@@ -1,0 +1,14 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "cloudflare-workers",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-04-21",
+	"observability": {
+		"enabled": true
+	},
+	"vars": {
+		"DATA_API_USERNAME": "",
+		"DATA_API_PASSWORD": "",
+		"DATA_API_ENDPOINT": ""
+	}	
+}
