@@ -1,0 +1,18 @@
+{
+  "name": "aws-lambdas",
+  "version": "1.0.0",
+  "main": "index.mjs",
+  "type": "module",
+  "scripts": {
+    "deploy-airport-lambdas": "env-cmd -f .env node scripts/deploy_airport_lambda_functions.mjs",
+    "deploy-airport-api": "env-cmd -f .env node scripts/deploy_api_gateway_with_integrations.mjs",
+    "test-airport-api-local": "env-cmd -f .env node tests/airport_api_local.test.mjs",
+    "test-airport-api-aws": "env-cmd -f .env node tests/airport_api_aws.test.mjs"
+  },
+  "author": "Viraj Agarwal",
+  "description": "AWS Lambdas for the Couchbase Data API Serverless Cookbook",
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.0.0",
+    "assert": "^2.0.0"
+  }
+}
