@@ -23,4 +23,14 @@ export const getDocumentUrl = (env: Env, documentKey: string) => {
 // Helper function to construct query URL
 export const getQueryUrl = (env: Env) => {
 	return `https://${env.DATA_API_ENDPOINT}/_p/query/query/service`;
+};
+
+// Helper function to construct FTS search URL
+export const getFTSSearchUrl = (env: Env, indexName: string) => {
+	return `https://${env.DATA_API_ENDPOINT}/_p/fts/api/bucket/${BUCKET_NAME}/scope/${SCOPE_NAME}/index/${indexName}/query`;
+};
+
+// Helper function to construct FTS index creation URL
+export const getFTSIndexUrl = (env: Env, indexName: string) => {
+	return `https://${env.DATA_API_ENDPOINT}/_p/fts/api/bucket/${BUCKET_NAME}/scope/${SCOPE_NAME}/index/${indexName}`;
 }; 

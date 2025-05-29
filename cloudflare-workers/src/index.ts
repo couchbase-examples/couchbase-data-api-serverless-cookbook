@@ -6,6 +6,8 @@ import { updateAirport } from './handlers/updateAirport';
 import { deleteAirport } from './handlers/deleteAirport';
 import { getAirportRoutes } from './handlers/getAirportRoutes';
 import { getAirportAirlines } from './handlers/getAirportAirlines';
+import { getHotelsNearAirport } from './handlers/getHotelsNearAirport';
+import { createFTSIndex } from './handlers/createFTSIndex';
 
 // Create Hono app
 const app = new Hono<{ Bindings: Env }>();
@@ -16,6 +18,13 @@ app.get('/', (c) => {
 		message: "Welcome to the Airport Information System API"
 	}, 200);
 });
+
+// FTS Index Management
+// Create FTS index for hotel geo-spatial search
+app.post('/fts/index/create', createFTSIndex);
+
+// Find hotels near a specific airport (FTS)
+app.post('/airports/hotels/nearby', getHotelsNearAirport);
 
 // Find routes for a specific airport
 app.post('/airports/routes', getAirportRoutes);
