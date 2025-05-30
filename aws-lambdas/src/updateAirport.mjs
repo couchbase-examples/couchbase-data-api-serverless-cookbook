@@ -90,7 +90,7 @@ export const handler = async (event) => {
 
         // Create the request options
         const options = {
-            hostname: baseUrl.replace('https://', ''),
+            hostname: new URL(baseUrl).hostname,
             path: `/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}`,
             method: 'PUT',
             headers: {
