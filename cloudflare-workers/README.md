@@ -13,12 +13,11 @@ The API provides a comprehensive Airport Information System that manages airport
 - `DELETE /airports/{document_key}` - Delete an airport document
 
 ### Airport Information Queries
-- `POST /airports/routes` - Find routes for a specific airport
-- `POST /airports/airlines` - Find airlines that service a specific airport
+- `GET /airports/routes` - Find routes for a specific airport
+- `GET /airports/airlines` - Find airlines that service a specific airport
 
 ### Full Text Search (FTS) Features
-- `POST /fts/index/create` - Create FTS index for hotel geo-spatial search
-- `POST /airports/hotels/nearby` - Find hotels near a specific airport using geo-spatial FTS
+- `GET /airports/hotels/nearby` - Find hotels near a specific airport using geo-spatial FTS
 
 **Note:** The FTS features require:
 1. A Full Text Search index with geo-spatial mapping on hotel documents
@@ -53,6 +52,28 @@ npm install
   }
 }
 ```
+
+## FTS Index Setup
+
+Before using the hotel search functionality, you need to create a Full Text Search index. A script is provided to create the required geo-spatial FTS index:
+
+### Using the FTS Index Creation Script
+
+1. Set your environment variables:
+```bash
+export DATA_API_USERNAME="your_username"
+export DATA_API_PASSWORD="your_password"
+export DATA_API_ENDPOINT="your_endpoint"
+```
+
+2. Run the script to create the FTS index:
+```bash
+./scripts/create-fts-index.sh
+```
+
+This script creates a geo-spatial FTS index called `hotel-geo-index` that enables proximity searches on hotel documents. The index must be created before using the hotel search functionality.
+
+**Note:** The index creation is a one-time setup process. Once created, the index will be built in the background and will be ready for use with the hotel search endpoint.
 
 ## Development
 
@@ -96,40 +117,30 @@ curl -X DELETE https://your-worker.your-subdomain.workers.dev/airports/airport_1
 
 ### Find routes for an airport
 ```bash
-curl -X POST https://your-worker.your-subdomain.workers.dev/airports/routes \
-  -H "Content-Type: application/json" \
-  -d '{"airportCode": "LAX"}'
+curl https://your-worker.your-subdomain.workers.dev/airports/routes?airportCode=LAX
 ```
 
 ### Find airlines for an airport
 ```bash
-curl -X POST https://your-worker.your-subdomain.workers.dev/airports/airlines \
-  -H "Content-Type: application/json" \
-  -d '{"airportCode": "LAX"}'
+curl https://your-worker.your-subdomain.workers.dev/airports/airlines?airportCode=LAX
 ```
-
-### Create FTS index for hotel search
-```bash
-curl -X POST https://your-worker.your-subdomain.workers.dev/fts/index/create \
-  -H "Content-Type: application/json"
-```
-
-**Note:** This endpoint creates a geo-spatial FTS index called `hotel-geo-index` that enables proximity searches on hotel documents. The index must be created before using the hotel search functionality.
 
 ### Find hotels near an airport
 ```bash
-curl -X POST https://your-worker.your-subdomain.workers.dev/airports/hotels/nearby \
-  -H "Content-Type: application/json" \
-  -d '{"airportCode": "SFO", "distance": "10km"}'
+curl "https://your-worker.your-subdomain.workers.dev/airports/hotels/nearby?airportId=airport_1254&distance=10km"
 ```
 
-**Parameters:**
-- `airportCode`: FAA or ICAO code for the airport (required)
+**Query Parameters:**
+- `airportId`: Airport document ID (required) - e.g., airport_1254, airport_1255
 - `distance`: Search radius (optional, default: "5km")
+
+**Prerequisites:** Make sure you have created the FTS index using the provided script before using this endpoint.
 
 ## Project Structure
 
 ```
+scripts/               # Utility scripts
+└── create-fts-index.sh # Script to create FTS index for hotel search
 src/
 ├── handlers/          # API route handlers
 │   ├── createAirport.ts
@@ -138,7 +149,6 @@ src/
 │   ├── deleteAirport.ts
 │   ├── getAirportRoutes.ts
 │   ├── getAirportAirlines.ts
-│   ├── createFTSIndex.ts
 │   └── getHotelsNearAirport.ts
 ├── types/             # TypeScript type definitions
 │   ├── airport.ts
