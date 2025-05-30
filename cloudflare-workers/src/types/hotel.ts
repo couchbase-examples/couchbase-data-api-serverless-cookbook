@@ -1,4 +1,3 @@
-// Hotel document type
 export interface HotelDocument {
 	id: number;
 	type: string;

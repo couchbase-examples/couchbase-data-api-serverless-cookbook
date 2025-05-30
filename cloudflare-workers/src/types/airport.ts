@@ -1,4 +1,3 @@
-// Types
 export interface AirportDocument {
 	airportname: string;
 	city: string;

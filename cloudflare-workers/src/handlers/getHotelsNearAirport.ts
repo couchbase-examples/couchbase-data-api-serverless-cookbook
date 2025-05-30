@@ -115,7 +115,7 @@ export const getHotelsNearAirport = async (c: Context<{ Bindings: Env }>) => {
 				{
 					"by": "geo_distance",
 					"field": "geo",
-					"unit": "mi",
+					"unit": "km",
 					"location": {
 						"lon": longitude,
 						"lat": latitude
@@ -150,26 +150,12 @@ export const getHotelsNearAirport = async (c: Context<{ Bindings: Env }>) => {
 
 		const ftsData = await ftsResponse.json() as FTSResponse;
 
-		// Format the response to include distance information
+		// Format the response
 		const hotels = ftsData.hits?.map((hit, index) => {
 			const hotel = hit.fields as HotelDocument;
 			
-			// Extract distance from FTS sort (should now be numeric, in miles)
-			let distanceMi: number = 0;
-			if (hit.sort && Array.isArray(hit.sort) && hit.sort.length > 0) {
-				const sortValue = hit.sort[0];
-				if (typeof sortValue === 'number') {
-					distanceMi = Math.round(sortValue * 100) / 100; // Round to 2 decimal places
-				} else {
-					// Log if still getting non-numeric values
-					console.warn(`Unexpected sort value type for hotel ${hotel.name}:`, typeof sortValue, sortValue);
-					distanceMi = 0;
-				}
-			}
-			
 			return {
 				...hotel,
-				distance_mi: distanceMi,
 				score: hit.score
 			};
 		}) || [];

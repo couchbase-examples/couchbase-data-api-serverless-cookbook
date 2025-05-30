@@ -16,6 +16,15 @@ The API provides a comprehensive Airport Information System that manages airport
 - `POST /airports/routes` - Find routes for a specific airport
 - `POST /airports/airlines` - Find airlines that service a specific airport
 
+### Full Text Search (FTS) Features
+- `POST /fts/index/create` - Create FTS index for hotel geo-spatial search
+- `POST /airports/hotels/nearby` - Find hotels near a specific airport using geo-spatial FTS
+
+**Note:** The FTS features require:
+1. A Full Text Search index with geo-spatial mapping on hotel documents
+2. The travel-sample dataset with hotel documents in the `inventory.hotel` collection
+3. Hotels must have geo coordinates (`geo.lat` and `geo.lon` fields) for proximity search
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18 or later)
@@ -99,6 +108,25 @@ curl -X POST https://your-worker.your-subdomain.workers.dev/airports/airlines \
   -d '{"airportCode": "LAX"}'
 ```
 
+### Create FTS index for hotel search
+```bash
+curl -X POST https://your-worker.your-subdomain.workers.dev/fts/index/create \
+  -H "Content-Type: application/json"
+```
+
+**Note:** This endpoint creates a geo-spatial FTS index called `hotel-geo-index` that enables proximity searches on hotel documents. The index must be created before using the hotel search functionality.
+
+### Find hotels near an airport
+```bash
+curl -X POST https://your-worker.your-subdomain.workers.dev/airports/hotels/nearby \
+  -H "Content-Type: application/json" \
+  -d '{"airportCode": "SFO", "distance": "10km"}'
+```
+
+**Parameters:**
+- `airportCode`: FAA or ICAO code for the airport (required)
+- `distance`: Search radius (optional, default: "5km")
+
 ## Project Structure
 
 ```
@@ -109,9 +137,12 @@ src/
 │   ├── updateAirport.ts
 │   ├── deleteAirport.ts
 │   ├── getAirportRoutes.ts
-│   └── getAirportAirlines.ts
+│   ├── getAirportAirlines.ts
+│   ├── createFTSIndex.ts
+│   └── getHotelsNearAirport.ts
 ├── types/             # TypeScript type definitions
 │   ├── airport.ts
+│   ├── hotel.ts
 │   └── env.ts
 ├── utils/             # Utility functions
 └── index.ts           # Main application entry point
