@@ -87,7 +87,7 @@ export const handler = async (event) => {
 
         // Create the request options
         const options = {
-            hostname: baseUrl.replace('https://', ''),
+            hostname: new URL(baseUrl).hostname,
             path: '/_p/query/query/service',
             method: 'POST',
             headers: {
