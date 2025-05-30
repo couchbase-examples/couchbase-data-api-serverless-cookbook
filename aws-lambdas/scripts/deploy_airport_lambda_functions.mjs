@@ -33,7 +33,7 @@ function executeCommand(cmd) {
 }
 
 async function createZipFile(functionName, handlerFile) {
-    const handlerPath = path.join(__dirname, '..', 'handlers', handlerFile);
+    const handlerPath = path.join(__dirname, '..', 'src', handlerFile);
     const zipDir = path.join(__dirname, '..', 'zips');
     
     // Create zips directory if it doesn't exist

@@ -6,25 +6,63 @@ const COLLECTION_CONFIG = {
     scope: 'inventory'
 };
 
+// Error formatting function
+const formatError = function(error) {
+    return {
+        statusCode: error.statusCode || 500,
+        headers: {
+            "Content-Type": "text/plain",
+            "x-amzn-ErrorType": error.code
+        },
+        isBase64Encoded: false,
+        body: error.code + ": " + error.message
+    };
+};
+
 export const handler = async (event) => {
     try {
         // Configuration validation
         if (!process.env.BASE_URL) {
-            throw new Error('BASE_URL environment variable is not set');
+            return formatError({
+                statusCode: 500,
+                code: "ConfigurationError",
+                message: "BASE_URL environment variable is not set"
+            });
         }
         if (!process.env.CLUSTER_PASSWORD) {
-            throw new Error('CLUSTER_PASSWORD environment variable is not set');
+            return formatError({
+                statusCode: 500,
+                code: "ConfigurationError",
+                message: "CLUSTER_PASSWORD environment variable is not set"
+            });
         }
         if (!process.env.USERNAME) {
-            throw new Error('USERNAME environment variable is not set');
+            return formatError({
+                statusCode: 500,
+                code: "ConfigurationError",
+                message: "USERNAME environment variable is not set"
+            });
         }
 
         // Parse request body
-        const requestData = JSON.parse(event.body || '{}');
-        const airportCode = requestData.airportCode;
+        let requestData;
+        try {
+            requestData = JSON.parse(event.body || '{}');
+        } catch (e) {
+            return formatError({
+                statusCode: 400,
+                code: "ValidationError",
+                message: "Invalid JSON in request body"
+            });
+        }
         
+        const airportCode = requestData.airportCode;
         if (!airportCode) {
-            throw new Error('Airport code is required');
+            return formatError({
+                statusCode: 400,
+                code: "ValidationError",
+                message: "Airport code is required"
+            });
         }
 
         const baseUrl = process.env.BASE_URL;
@@ -74,9 +112,9 @@ export const handler = async (event) => {
                     if (res.statusCode >= 200 && res.statusCode < 300) {
                         const queryResponse = JSON.parse(data);
                         resolve({
-                            statusCode: res.statusCode,
+                            statusCode: 200,
                             headers: {
-                                'Content-Type': 'application/json'
+                                'content-type': 'application/json'
                             },
                             body: JSON.stringify({
                                 routes: queryResponse.results,
@@ -84,26 +122,23 @@ export const handler = async (event) => {
                                     resultCount: queryResponse.metrics.resultCount,
                                     executionTime: queryResponse.metrics.executionTime
                                 }
-                            })
+                            }),
+                            isBase64Encoded: false
                         });
                     } else {
-                        resolve({
+                        const errorCode = res.statusCode === 403 ? 'InvalidAuth' :
+                                        res.statusCode === 400 ? 'InvalidArgument' : 'InternalError';
+                        resolve(formatError({
                             statusCode: res.statusCode,
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                error: res.statusCode === 403 ? 'InvalidAuth' :
-                                       res.statusCode === 400 ? 'InvalidArgument' : 'Internal',
-                                message: data || 'An error occurred processing the request'
-                            })
-                        });
+                            code: errorCode,
+                            message: data || 'An error occurred processing the request'
+                        }));
                     }
                 });
             });
 
             req.on('error', (error) => {
-                reject(error);
+                reject({ statusCode: 500, code: "NetworkError", message: error.message });
             });
 
             req.write(body);
@@ -113,15 +148,11 @@ export const handler = async (event) => {
         return response;
 
     } catch (error) {
-        return {
-            statusCode: 500,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                error: 'Internal',
-                message: error.message
-            })
-        };
+        console.error('Lambda execution error:', error);
+        return formatError({
+            statusCode: error.statusCode || 500,
+            code: error.code || "InternalError",
+            message: error.message || "An unexpected error occurred"
+        });
     }
 }; 

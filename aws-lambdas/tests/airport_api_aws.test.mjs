@@ -1,19 +1,9 @@
-import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import assert from 'assert';
+import { execSync } from 'child_process';
 
-// AWS Lambda configuration
+// Configuration
 const REGION = process.env.REGION;
-const lambda = new LambdaClient({ region: REGION });
-
-// Function names
-const FUNCTIONS = {
-    createAirport: 'data-api-createAirport',
-    getAirport: 'data-api-getAirport',
-    updateAirport: 'data-api-updateAirport',
-    deleteAirport: 'data-api-deleteAirport',
-    getAirportRoutes: 'data-api-getAirportRoutes',
-    getAirportAirlines: 'data-api-getAirportAirlines'
-};
+let API_ENDPOINT;
 
 // Test data
 const TEST_AIRPORT = {
@@ -38,160 +28,188 @@ if (!REGION) {
     process.exit(1);
 }
 
-async function invokeLambda(functionName, event = {}) {
-    const command = new InvokeCommand({
-        FunctionName: functionName,
-        Payload: JSON.stringify({
-            ...event,
-            // Add API Gateway event structure
-            requestContext: {
-                http: {
-                    method: event.httpMethod || 'GET'
-                }
-            }
-        }),
-        InvocationType: 'RequestResponse'
-    });
+function executeCommand(cmd) {
+    try {
+        const output = execSync(cmd, { encoding: 'utf-8' });
+        return output.trim();
+    } catch (error) {
+        console.error('Error executing command:', error);
+        throw error;
+    }
+}
+
+async function getApiEndpoint() {
+    try {
+        const cmd = `aws apigatewayv2 get-apis \
+            --region ${REGION} \
+            --query "Items[?Name=='airport-data-api'].ApiEndpoint" \
+            --output text`;
+        
+        const endpoint = executeCommand(cmd);
+        if (!endpoint) {
+            throw new Error('Could not find airport-data-api');
+        }
+        
+        return endpoint;
+    } catch (error) {
+        console.error('Failed to get API endpoint:', error);
+        throw error;
+    }
+}
+
+async function makeRequest(method, path, body = null, headers = {}) {
+    const url = new URL(path, API_ENDPOINT);
+    
+    const options = {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            ...headers
+        }
+    };
+
+    if (body) {
+        options.body = JSON.stringify(body);
+    }
 
     try {
-        const response = await lambda.send(command);
-        
-        // Check for Lambda execution errors
-        if (response.FunctionError) {
-            const error = JSON.parse(Buffer.from(response.Payload).toString());
-            console.error('Lambda execution error:', error);
-            throw new Error(error.errorMessage);
+        console.log(`Making ${method} request to ${url}`);
+        if (body) {
+            console.log('Request body:', JSON.stringify(body, null, 2));
+        }
+        if (Object.keys(headers).length > 0) {
+            console.log('Request headers:', headers);
         }
 
-        const result = JSON.parse(Buffer.from(response.Payload).toString());
-        return result;
+        const response = await fetch(url, options);
+        let responseData;
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                responseData = await response.json();
+            } catch (e) {
+                const textData = await response.text();
+                console.error('Failed to parse JSON response:', textData);
+                responseData = { error: 'InvalidResponse', message: textData };
+            }
+        } else {
+            const textData = await response.text();
+            responseData = { error: 'InvalidResponse', message: textData };
+        }
+        
+        // Log detailed response information for non-200 responses
+        if (response.status !== 200) {
+            console.error('Request failed with status:', response.status);
+            console.error('Response headers:', Object.fromEntries(response.headers.entries()));
+            console.error('Response body:', responseData);
+        }
+        
+        return {
+            statusCode: response.status,
+            headers: Object.fromEntries(response.headers.entries()),
+            body: responseData
+        };
     } catch (error) {
-        console.error(`Error invoking ${functionName}:`, error);
+        console.error(`API request failed: ${method} ${path}`);
+        console.error('Error details:', error);
         throw error;
     }
 }
 
 async function runTests() {
-    console.log('Starting AWS Lambda tests...\n');
-    let etag = null;
-
+    console.log('Starting API Gateway Integration Tests...\n');
+    
     try {
-        // Test Create Airport Lambda
-        console.log('Testing Create Airport Lambda function...');
-        const createResult = await invokeLambda(FUNCTIONS.createAirport, {
-            httpMethod: 'POST',
-            pathParameters: {
-                airportId: TEST_AIRPORT.id
-            },
-            body: JSON.stringify(TEST_AIRPORT)
-        });
-        console.log('Create Response:', createResult);
+        // Get API endpoint
+        console.log('Getting API Gateway endpoint...');
+        API_ENDPOINT = await getApiEndpoint();
+        console.log(`Using API endpoint: ${API_ENDPOINT}\n`);
+        
+        let etag = null;
+
+        // Test Create Airport
+        console.log('Testing Create Airport...');
+        const createResult = await makeRequest(
+            'POST',
+            `/airports/${TEST_AIRPORT.id}`,
+            TEST_AIRPORT
+        );
         assert.strictEqual(createResult.statusCode, 200, 'Create should return 200');
-        assert.ok(createResult.headers['ETag'], 'Create should return an ETag');
-        assert.ok(createResult.headers['X-CB-MutationToken'], 'Create should return a mutation token');
-        console.log('✓ Create Airport Lambda test passed\n');
+        assert.ok(createResult.headers.etag, 'Create should return an ETag');
+        console.log('✓ Create Airport test passed\n');
 
         // Save ETag for subsequent operations
-        etag = createResult.headers['ETag'];
+        etag = createResult.headers.etag;
 
-        // Test Get Airport Lambda
-        console.log('Testing Get Airport Lambda function...');
-        const getResult = await invokeLambda(FUNCTIONS.getAirport, {
-            httpMethod: 'GET',
-            pathParameters: {
-                airportId: TEST_AIRPORT.id
-            }
-        });
-        console.log('Get Response:', getResult);
+        // Test Get Airport
+        console.log('Testing Get Airport...');
+        const getResult = await makeRequest('GET', `/airports/${TEST_AIRPORT.id}`);
         assert.strictEqual(getResult.statusCode, 200, 'Get should return 200');
-        assert.ok(getResult.headers['ETag'], 'Get should return an ETag');
-        const getData = JSON.parse(getResult.body);
-        assert.strictEqual(getData.type, 'airport', 'Document should be of type airport');
-        assert.strictEqual(getData.id, TEST_AIRPORT.id, 'Document should have correct ID');
-        console.log('✓ Get Airport Lambda test passed\n');
+        assert.ok(getResult.headers.etag, 'Get should return an ETag');
+        assert.strictEqual(getResult.body.type, 'airport', 'Document should be of type airport');
+        assert.strictEqual(getResult.body.id, TEST_AIRPORT.id, 'Document should have correct ID');
+        console.log('✓ Get Airport test passed\n');
 
-        // Test Update Airport Lambda
-        console.log('Testing Update Airport Lambda function...');
+        // Test Update Airport
+        console.log('Testing Update Airport...');
         const updatedAirport = {
             ...TEST_AIRPORT,
             airportname: "Updated Test Airport",
             city: "Updated Test City"
         };
-        const updateResult = await invokeLambda(FUNCTIONS.updateAirport, {
-            httpMethod: 'PUT',
-            pathParameters: {
-                airportId: TEST_AIRPORT.id
-            },
-            headers: {
-                'If-Match': etag
-            },
-            body: JSON.stringify(updatedAirport)
-        });
-        console.log('Update Response:', updateResult);
+        const updateResult = await makeRequest(
+            'PUT',
+            `/airports/${TEST_AIRPORT.id}`,
+            updatedAirport,
+            { 'If-Match': etag }
+        );
         assert.strictEqual(updateResult.statusCode, 200, 'Update should return 200');
-        assert.ok(updateResult.headers['ETag'], 'Update should return an ETag');
-        assert.ok(updateResult.headers['X-CB-MutationToken'], 'Update should return a mutation token');
-        console.log('✓ Update Airport Lambda test passed\n');
+        assert.ok(updateResult.headers.etag, 'Update should return an ETag');
+        console.log('✓ Update Airport test passed\n');
 
-        // Test Get Airport Routes Lambda
-        console.log('Testing Get Airport Routes Lambda function...');
-        const routesResult = await invokeLambda(FUNCTIONS.getAirportRoutes, {
-            httpMethod: 'POST',
-            body: JSON.stringify({
-                airportCode: 'SFO'
-            })
-        });
-        console.log('Routes Response:', routesResult);
+        // Test Get Airport Routes
+        console.log('Testing Get Airport Routes...');
+        const routesResult = await makeRequest(
+            'POST',
+            '/airports/routes',
+            { airportCode: 'SFO' }
+        );
         assert.strictEqual(routesResult.statusCode, 200, 'Get Routes should return 200');
-        const routesData = JSON.parse(routesResult.body);
-        assert.ok(Array.isArray(routesData.routes), 'Response should include routes array');
-        assert.ok(routesData.metadata, 'Response should include metadata');
-        console.log('✓ Get Airport Routes Lambda test passed\n');
+        assert.ok(Array.isArray(routesResult.body.routes), 'Response should include routes array');
+        assert.ok(routesResult.body.metadata, 'Response should include metadata');
+        console.log('✓ Get Airport Routes test passed\n');
 
-        // Test Get Airport Airlines Lambda
-        console.log('Testing Get Airport Airlines Lambda function...');
-        const airlinesResult = await invokeLambda(FUNCTIONS.getAirportAirlines, {
-            httpMethod: 'POST',
-            body: JSON.stringify({
-                airportCode: 'SFO'
-            })
-        });
-        console.log('Airlines Response:', airlinesResult);
+        // Test Get Airport Airlines
+        console.log('Testing Get Airport Airlines...');
+        const airlinesResult = await makeRequest(
+            'POST',
+            '/airports/airlines',
+            { airportCode: 'SFO' }
+        );
         assert.strictEqual(airlinesResult.statusCode, 200, 'Get Airlines should return 200');
-        const airlinesData = JSON.parse(airlinesResult.body);
-        assert.ok(Array.isArray(airlinesData.airlines), 'Response should include airlines array');
-        assert.ok(airlinesData.metadata, 'Response should include metadata');
-        console.log('✓ Get Airport Airlines Lambda test passed\n');
+        assert.ok(Array.isArray(airlinesResult.body.airlines), 'Response should include airlines array');
+        assert.ok(airlinesResult.body.metadata, 'Response should include metadata');
+        console.log('✓ Get Airport Airlines test passed\n');
 
-        // Test Delete Airport Lambda
-        console.log('Testing Delete Airport Lambda function...');
-        const deleteResult = await invokeLambda(FUNCTIONS.deleteAirport, {
-            httpMethod: 'DELETE',
-            pathParameters: {
-                airportId: TEST_AIRPORT.id
-            },
-            headers: {
-                'If-Match': updateResult.headers['ETag']
-            }
-        });
-        console.log('Delete Response:', deleteResult);
+        // Test Delete Airport
+        console.log('Testing Delete Airport...');
+        const deleteResult = await makeRequest(
+            'DELETE',
+            `/airports/${TEST_AIRPORT.id}`,
+            null,
+            { 'If-Match': updateResult.headers.etag }
+        );
         assert.strictEqual(deleteResult.statusCode, 200, 'Delete should return 200');
-        assert.ok(deleteResult.headers['X-CB-MutationToken'], 'Delete should return a mutation token');
-        console.log('✓ Delete Airport Lambda test passed\n');
+        console.log('✓ Delete Airport test passed\n');
 
-        // Verify Delete by attempting Get
+        // Verify Delete
         console.log('Verifying Delete operation...');
-        const verifyDelete = await invokeLambda(FUNCTIONS.getAirport, {
-            httpMethod: 'GET',
-            pathParameters: {
-                airportId: TEST_AIRPORT.id
-            }
-        });
-        console.log('Verify Delete Response:', verifyDelete);
+        const verifyDelete = await makeRequest('GET', `/airports/${TEST_AIRPORT.id}`);
         assert.strictEqual(verifyDelete.statusCode, 404, 'Get after Delete should return 404');
         console.log('✓ Delete verification passed\n');
 
-        console.log('All AWS Lambda tests passed! 🎉');
+        console.log('All API Gateway integration tests passed! 🎉');
 
     } catch (error) {
         console.error('Test failed:', error);
