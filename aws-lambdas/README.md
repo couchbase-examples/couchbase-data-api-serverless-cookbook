@@ -46,7 +46,7 @@ The API provides a comprehensive Airport Information System that manages airport
    LAMBDA_ROLE=<aws_lambda_role_arn>
    REGION=<aws_region>
    MEMORY_SIZE=128
-   TIMEOUT=30
+   TIMEOUT=3
 
    # Cluster Credentials
    BASE_URL=<capella-data-api-endpoint>
