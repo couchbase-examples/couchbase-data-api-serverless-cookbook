@@ -2,7 +2,7 @@ import { Context } from 'hono';
 import { Env } from '../types/env';
 import { AirportDocument } from '../types/airport';
 import { HotelDocument } from '../types/hotel';
-import { getAuthHeaders, getQueryUrl, getFTSSearchUrl } from '../utils/couchbase';
+import { getAuthHeaders, getDocumentUrl, getFTSSearchUrl } from '../utils/couchbase';
 
 // Type for FTS response
 interface FTSResponse {
@@ -15,85 +15,59 @@ interface FTSResponse {
 	total_hits?: number;
 }
 
-// Type for N1QL query response
-interface N1QLResponse<T> {
-	results?: T[];
-	status: string;
-	metrics?: any;
-}
-
 export const getHotelsNearAirport = async (c: Context<{ Bindings: Env }>) => {
 	try {
-		const body = await c.req.json();
-		const { airportCode, distance = "5km" } = body;
+		const airportId = c.req.query('airportId');
+		const distance = c.req.query('distance') || "5km";
 
 		// Validate input
-		if (!airportCode || typeof airportCode !== 'string') {
+		if (!airportId || typeof airportId !== 'string') {
 			return new Response(
 				JSON.stringify({ 
-					error: 'Invalid input. Airport code is required.',
-					example: {
-						airportCode: "SFO",
-						distance: "5km"
-					}
+					error: 'Missing required query parameter: airportId',
+					example: '/airports/hotels/nearby?airportId=airport_1254&distance=5km'
 				}),
 				{ status: 400, headers: { 'Content-Type': 'application/json' } }
 			);
 		}
 
-		// Step 1: Find airport by airport code using N1QL query
-		const airportQuery = `
-			SELECT a.*
-			FROM \`travel-sample\`.inventory.airport a 
-			WHERE a.faa = ? OR a.icao = ?
-			LIMIT 1
-		`;
+		// Step 1: Get airport document by ID
+		const documentUrl = getDocumentUrl(c.env, airportId);
 		
-		const airportArgs = [airportCode.toUpperCase(), airportCode.toUpperCase()];
-		
-		const airportQueryBody = {
-			statement: airportQuery,
-			args: airportArgs
-		};
-		
-		const queryUrl = getQueryUrl(c.env);
-		console.log(`Fetching airport data using N1QL query: ${airportQuery}`);
-		console.log(`Args: ${JSON.stringify(airportArgs)}`);
+		console.log(`Fetching airport data using GET: ${documentUrl}`);
 
-		const airportResponse = await fetch(queryUrl, {
-			method: 'POST',
-			headers: getAuthHeaders(c.env),
-			body: JSON.stringify(airportQueryBody)
+		const airportResponse = await fetch(documentUrl, {
+			method: 'GET',
+			headers: getAuthHeaders(c.env)
 		});
 
 		if (!airportResponse.ok) {
 			const errorBody = await airportResponse.text();
-			console.error(`Airport Query API Error (${airportResponse.status}): ${errorBody}`);
+			console.error(`Airport GET API Error (${airportResponse.status}): ${errorBody}`);
+			
+			if (airportResponse.status === 404) {
+				return new Response(
+					JSON.stringify({ 
+						error: `Airport not found: ${airportId}`,
+						detail: "No airport document found with the specified document ID"
+					}),
+					{ status: 404, headers: { 'Content-Type': 'application/json' } }
+				);
+			}
+			
 			return new Response(
 				JSON.stringify({ 
-					error: `Error searching for airport: ${airportCode}`,
+					error: `Error fetching airport: ${airportId}`,
 					detail: errorBody
 				}),
 				{ status: airportResponse.status, headers: { 'Content-Type': 'application/json' } }
 			);
 		}
 
-		const airportQueryResult = await airportResponse.json() as N1QLResponse<AirportDocument>;
-		
-		if (!airportQueryResult.results || airportQueryResult.results.length === 0) {
-			return new Response(
-				JSON.stringify({ 
-					error: `Airport not found: ${airportCode}`,
-					detail: "No airport found with the specified FAA or ICAO code"
-				}),
-				{ status: 404, headers: { 'Content-Type': 'application/json' } }
-			);
-		}
-
-		const airportData = airportQueryResult.results[0] as AirportDocument;
+		const airportData = await airportResponse.json() as AirportDocument;
 		const { lat: latitude, lon: longitude } = airportData.geo;
 
-		console.log(`Airport ${airportCode} coordinates: lat=${latitude}, lon=${longitude}`);
+		console.log(`Airport ${airportId} coordinates: lat=${latitude}, lon=${longitude}`);
 
 		// Step 2: Search for nearby hotels using FTS
 		const indexName = 'hotel-geo-index';
@@ -163,7 +137,8 @@ export const getHotelsNearAirport = async (c: Context<{ Bindings: Env }>) => {
 		return new Response(
 			JSON.stringify({
 				airport: {
-					code: airportCode.toUpperCase(),
+					id: airportId,
+					code: airportData.faa || airportData.icao,
 					name: airportData.airportname,
 					city: airportData.city,
 					country: airportData.country,

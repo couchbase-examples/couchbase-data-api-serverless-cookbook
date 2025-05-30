@@ -4,20 +4,14 @@ import { getAuthHeaders, getQueryUrl } from '../utils/couchbase';
 
 export const getAirportAirlines = async (c: Context<{ Bindings: Env }>) => {
 	try {
-		let requestBody: { airportCode: string };
+		const airportCode = c.req.query('airportCode');
 		
-		try {
-			requestBody = await c.req.json();
-		} catch (e) {
+		if (!airportCode) {
 			return new Response(
-				JSON.stringify({ error: 'Invalid JSON in request body' }),
-				{ status: 400, headers: { 'Content-Type': 'application/json' } }
-			);
-		}
-
-		if (!requestBody.airportCode) {
-			return new Response(
-				JSON.stringify({ error: 'Missing required field: airportCode' }),
+				JSON.stringify({ 
+					error: 'Missing required query parameter: airportCode',
+					example: '/airports/airlines?airportCode=LAX'
+				}),
 				{ status: 400, headers: { 'Content-Type': 'application/json' } }
 			);
 		}
@@ -29,7 +23,7 @@ export const getAirportAirlines = async (c: Context<{ Bindings: Env }>) => {
 			ORDER BY r.airline
 		`;
 		
-		const args = [requestBody.airportCode, requestBody.airportCode];
+		const args = [airportCode, airportCode];
 		
 		const queryBody = {
 			statement,
