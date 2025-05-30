@@ -1,10 +1,10 @@
 import assert from 'assert';
-import { handler as createAirportHandler } from '../handlers/createAirport.mjs';
-import { handler as getAirportHandler } from '../handlers/getAirport.mjs';
-import { handler as updateAirportHandler } from '../handlers/updateAirport.mjs';
-import { handler as deleteAirportHandler } from '../handlers/deleteAirport.mjs';
-import { handler as getAirportRoutesHandler } from '../handlers/getAirportRoutes.mjs';
-import { handler as getAirportAirlinesHandler } from '../handlers/getAirportAirlines.mjs';
+import { handler as createAirportHandler } from '../src/createAirport.mjs';
+import { handler as getAirportHandler } from '../src/getAirport.mjs';
+import { handler as updateAirportHandler } from '../src/updateAirport.mjs';
+import { handler as deleteAirportHandler } from '../src/deleteAirport.mjs';
+import { handler as getAirportRoutesHandler } from '../src/getAirportRoutes.mjs';
+import { handler as getAirportAirlinesHandler } from '../src/getAirportAirlines.mjs';
 
 // Test configuration
 const TEST_CONFIG = {
@@ -52,12 +52,12 @@ async function runTests() {
             body: JSON.stringify(TEST_AIRPORT)
         });
         assert.strictEqual(createResult.statusCode, 200, 'Create should return 200');
-        assert.ok(createResult.headers['ETag'], 'Create should return an ETag');
-        assert.ok(createResult.headers['X-CB-MutationToken'], 'Create should return a mutation token');
+        assert.ok(createResult.headers['etag'], 'Create should return an ETag');
+        assert.ok(createResult.headers['x-cb-mutationtoken'], 'Create should return a mutation token');
         console.log('✓ Create Airport test passed\n');
 
         // Save ETag for subsequent operations
-        etag = createResult.headers['ETag'];
+        etag = createResult.headers['etag'];
 
         // Test Get Airport
         console.log('Testing Get Airport operation...');
@@ -67,7 +67,7 @@ async function runTests() {
             }
         });
         assert.strictEqual(getResult.statusCode, 200, 'Get should return 200');
-        assert.ok(getResult.headers['ETag'], 'Get should return an ETag');
+        assert.ok(getResult.headers['etag'], 'Get should return an ETag');
         const getData = JSON.parse(getResult.body);
         assert.strictEqual(getData.type, 'airport', 'Document should be of type airport');
         assert.strictEqual(getData.id, TEST_AIRPORT.id, 'Document should have correct ID');
@@ -90,8 +90,8 @@ async function runTests() {
             body: JSON.stringify(updatedAirport)
         });
         assert.strictEqual(updateResult.statusCode, 200, 'Update should return 200');
-        assert.ok(updateResult.headers['ETag'], 'Update should return an ETag');
-        assert.ok(updateResult.headers['X-CB-MutationToken'], 'Update should return a mutation token');
+        assert.ok(updateResult.headers['etag'], 'Update should return an ETag');
+        assert.ok(updateResult.headers['x-cb-mutationtoken'], 'Update should return a mutation token');
         console.log('✓ Update Airport test passed\n');
 
         // Test Get Airport Routes
@@ -127,11 +127,11 @@ async function runTests() {
                 airportId: TEST_AIRPORT.id
             },
             headers: {
-                'If-Match': updateResult.headers['ETag']
+                'If-Match': updateResult.headers['etag']
             }
         });
         assert.strictEqual(deleteResult.statusCode, 200, 'Delete should return 200');
-        assert.ok(deleteResult.headers['X-CB-MutationToken'], 'Delete should return a mutation token');
+        assert.ok(deleteResult.headers['x-cb-mutationtoken'], 'Delete should return a mutation token');
         console.log('✓ Delete Airport test passed\n');
 
         // Verify Delete by attempting Get

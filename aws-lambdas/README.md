@@ -91,12 +91,19 @@ Run the local test suite:
 node tests/airport_api_local.test.mjs
 ```
 
-### AWS Lambda Testing
+### API Gateway Integration Testing
 
-Run the AWS Lambda test suite:
+The integration tests will automatically discover your API Gateway endpoint and test all API operations through it:
+
 ```bash
 node tests/airport_api_aws.test.mjs
 ```
+
+This will:
+- Automatically find your API Gateway endpoint
+- Test all API operations end-to-end
+- Verify response formats and status codes
+- Test error handling and edge cases
 
 ## API Examples
 

@@ -3,6 +3,7 @@ import { execSync } from 'child_process';
 // Configuration
 const REGION = process.env.REGION;
 const API_NAME = 'airport-data-api';
+const ACCOUNT_ID = process.env.ACCOUNT_ID;
 
 // Route configurations matching the Lambda functions
 const ROUTES = [
@@ -65,11 +66,11 @@ function createIntegration(apiId, lambdaArn) {
 function addLambdaPermission(functionName, apiId, statementId) {
     console.log(`Adding permission for Lambda: ${functionName}`);
     const cmd = `aws lambda add-permission \
-        --function-name ${functionName} \
+        --function-name "${functionName}" \
         --statement-id "apigateway-invoke-${statementId}" \
         --action lambda:InvokeFunction \
         --principal apigateway.amazonaws.com \
-        --source-arn "arn:aws:apigateway:${REGION}::/apis/${apiId}" \
+        --source-arn "arn:aws:execute-api:${REGION}:${ACCOUNT_ID}:${apiId}/*/*" \
         --region ${REGION}`;
     
     executeCommand(cmd);
@@ -151,6 +152,11 @@ function main() {
 // Validate required environment variables
 if (!process.env.REGION) {
     console.error('Missing required environment variable: REGION');
+    process.exit(1);
+}
+
+if (!process.env.ACCOUNT_ID) {
+    console.error('Missing required environment variable: ACCOUNT_ID');
     process.exit(1);
 }
 
