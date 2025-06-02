@@ -151,7 +151,6 @@ curl -X POST https://your-api-gateway-url/airports/airport_new \
 ```bash
 curl -X PUT https://your-api-gateway-url/airports/airport_1254 \
   -H "Content-Type: application/json" \
-  -H "If-Match: \"your-etag-value\"" \
   -d '{
     "airportname": "Updated Airport",
     "city": "Updated City",
@@ -171,8 +170,7 @@ curl -X PUT https://your-api-gateway-url/airports/airport_1254 \
 
 ### Delete an airport
 ```bash
-curl -X DELETE https://your-api-gateway-url/airports/airport_1254 \
-  -H "If-Match: \"your-etag-value\""
+curl -X DELETE https://your-api-gateway-url/airports/airport_1254
 ```
 
 ### Find routes for an airport
