@@ -209,6 +209,23 @@ async function runTests() {
         assert.strictEqual(verifyDelete.statusCode, 404, 'Get after Delete should return 404');
         console.log('✓ Delete verification passed\n');
 
+        // Test Get Hotels Near Airport
+        console.log('Testing Get Hotels Near Airport...');
+        const hotelsResult = await makeRequest(
+            'POST',
+            '/airports/hotels/nearby',
+            {
+                airportId: 'airport_1254',
+                distance: '10km'
+            }
+        );
+        assert.strictEqual(hotelsResult.statusCode, 200, 'Get Hotels should return 200');
+        assert.ok(hotelsResult.body.airport, 'Response should include airport details');
+        assert.ok(Array.isArray(hotelsResult.body.hotels), 'Response should include hotels array');
+        assert.ok(typeof hotelsResult.body.total_hotels_found === 'number', 'Response should include total_hotels_found');
+        assert.strictEqual(hotelsResult.body.search_criteria.distance, '10km', 'Response should include correct search distance');
+        console.log('✓ Get Hotels Near Airport test passed\n');
+
         console.log('All API Gateway integration tests passed! 🎉');
 
     } catch (error) {

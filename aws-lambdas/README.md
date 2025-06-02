@@ -15,6 +15,7 @@ The API provides a comprehensive Airport Information System that manages airport
 ### Airport Information Queries
 - `POST /airports/routes` - Find routes for a specific airport
 - `POST /airports/airlines` - Find airlines that service a specific airport
+- `POST /airports/hotels/nearby` - Find hotels near a specific airport using geo-spatial FTS
 
 ## Prerequisites
 
@@ -27,9 +28,12 @@ The API provides a comprehensive Airport Information System that manages airport
 ## Setup
 
 1. Clone the repository
+    ```
+    git clone https://github.com/couchbase-examples/couchbase-data-api-serverless-cookbook.git
+    ```
 2. Navigate to the aws-lambdas directory:
     ```bash
-    cd aws-lambdas
+    cd couchbase-data-api-serverless-cookbook/aws-lambdas
     ```
 3. Install dependencies:
     ```bash
@@ -54,13 +58,23 @@ The API provides a comprehensive Airport Information System that manages airport
    USERNAME=<capella-cluster-username>
    ```
 
+## FTS Index Setup
+
+Before using the hotel search functionality, you need to create a Full Text Search index:
+
+```bash
+npm run create-fts-index
+```
+
+This creates a geo-spatial FTS index called `hotel-geo-index` that enables proximity searches for hotels near airports. The index will be built in the background and will be ready for use shortly after creation.
+
 ## Deployment
 
 ### Deploy Lambda Functions
 
 Run the deployment script:
 ```bash
-node scripts/deploy_airport_lambda_functions.mjs
+npm run deploy-airport-lambdas
 ```
 
 This script will:
@@ -72,7 +86,7 @@ This script will:
 
 Run the API Gateway deployment script:
 ```bash
-node scripts/deploy_api_gateway_with_integrations.mjs
+npm run deploy-airport-api
 ```
 
 This script will:
@@ -88,7 +102,7 @@ This script will:
 
 Run the local test suite:
 ```bash
-node tests/airport_api_local.test.mjs
+npm run test-airport-api-local
 ```
 
 ### API Gateway Integration Testing
@@ -96,7 +110,7 @@ node tests/airport_api_local.test.mjs
 The integration tests will automatically discover your API Gateway endpoint and test all API operations through it:
 
 ```bash
-node tests/airport_api_aws.test.mjs
+npm run test-airport-api-aws
 ```
 
 This will:
@@ -179,20 +193,32 @@ curl -X POST https://your-api-gateway-url/airports/airlines \
   }'
 ```
 
+### Find hotels near an airport
+```bash
+curl -X POST https://your-api-gateway-url/airports/hotels/nearby \
+  -H "Content-Type: application/json" \
+  -d '{
+    "airportId": "airport_1254",
+    "distance": "10km"
+  }'
+```
+
 ## Project Structure
 
 ```
 aws-lambdas/
-├── src/                    # Lambda function handlers
+├── src/                   # Lambda function handlers
 │   ├── createAirport.mjs
 │   ├── getAirport.mjs
 │   ├── updateAirport.mjs
 │   ├── deleteAirport.mjs
 │   ├── getAirportRoutes.mjs
-│   └── getAirportAirlines.mjs
+│   ├── getAirportAirlines.mjs
+│   └── getHotelsNearAirport.mjs
 ├── scripts/               # Deployment scripts
 │   ├── deploy_airport_lambda_functions.mjs
-│   └── deploy_api_gateway_with_integrations.mjs
+│   ├── deploy_api_gateway_with_integrations.mjs
+│   └── create-fts-index.mjs
 ├── tests/                 # Test suites
 │   ├── airport_api_local.test.mjs
 │   └── airport_api_aws.test.mjs

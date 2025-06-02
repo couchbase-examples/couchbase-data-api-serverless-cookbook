@@ -5,6 +5,7 @@ import { handler as updateAirportHandler } from '../src/updateAirport.mjs';
 import { handler as deleteAirportHandler } from '../src/deleteAirport.mjs';
 import { handler as getAirportRoutesHandler } from '../src/getAirportRoutes.mjs';
 import { handler as getAirportAirlinesHandler } from '../src/getAirportAirlines.mjs';
+import { handler as getHotelsNearAirportHandler } from '../src/getHotelsNearAirport.mjs';
 
 // Test configuration
 const TEST_CONFIG = {
@@ -119,6 +120,22 @@ async function runTests() {
         assert.ok(Array.isArray(airlinesData.airlines), 'Response should include airlines array');
         assert.ok(airlinesData.metadata, 'Response should include metadata');
         console.log('✓ Get Airport Airlines test passed\n');
+
+        // Test Get Hotels Near Airport
+        console.log('Testing Get Hotels Near Airport operation...');
+        const hotelsResult = await getHotelsNearAirportHandler({
+            body: JSON.stringify({
+                airportId: 'airport_1254',
+                distance: '10km'
+            })
+        });
+        assert.strictEqual(hotelsResult.statusCode, 200, 'Get Hotels should return 200');
+        const hotelsData = JSON.parse(hotelsResult.body);
+        assert.ok(hotelsData.airport, 'Response should include airport details');
+        assert.ok(Array.isArray(hotelsData.hotels), 'Response should include hotels array');
+        assert.ok(hotelsData.total_hotels_found >= 0, 'Response should include total_hotels_found');
+        assert.ok(hotelsData.search_criteria.distance, 'Response should include search criteria');
+        console.log('✓ Get Hotels Near Airport test passed\n');
 
         // Test Delete Airport
         console.log('Testing Delete Airport operation...');
