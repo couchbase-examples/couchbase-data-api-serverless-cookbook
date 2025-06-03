@@ -88,7 +88,7 @@ function createLambdaFunction(functionName, zipPath, environment, handlerFile) {
     }
 }
 
-async function main() {
+async function main() { 
     try {
         // Create Lambda functions for each handler
         for (const func of FUNCTIONS) {

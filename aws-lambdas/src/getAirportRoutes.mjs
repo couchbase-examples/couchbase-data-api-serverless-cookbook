@@ -44,24 +44,13 @@ export const handler = async (event) => {
             });
         }
 
-        // Parse request body
-        let requestData;
-        try {
-            requestData = JSON.parse(event.body || '{}');
-        } catch (e) {
-            return formatError({
-                statusCode: 400,
-                code: "ValidationError",
-                message: "Invalid JSON in request body"
-            });
-        }
-        
-        const airportCode = requestData.airportCode;
+        // Get parameters from query string
+        const airportCode = event.queryStringParameters?.airportCode;
         if (!airportCode) {
             return formatError({
                 statusCode: 400,
                 code: "ValidationError",
-                message: "Airport code is required"
+                message: "Airport code is required as a query parameter"
             });
         }
 

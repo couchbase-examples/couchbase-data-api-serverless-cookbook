@@ -45,26 +45,15 @@ export const handler = async (event) => {
             });
         }
 
-        // Parse request body
-        let requestData;
-        try {
-            requestData = JSON.parse(event.body || '{}');
-        } catch (e) {
-            return formatError({
-                statusCode: 400,
-                code: "ValidationError",
-                message: "Invalid JSON in request body"
-            });
-        }
-        
-        const airportId = requestData.airportId;
-        const distance = requestData.distance || "5km";
+        // Get parameters from query string
+        const airportId = event.queryStringParameters?.airportId;
+        const distance = event.queryStringParameters?.distance || "5km";
 
         if (!airportId) {
             return formatError({
                 statusCode: 400,
                 code: "ValidationError",
-                message: "Airport ID is required"
+                message: "Airport ID is required as a query parameter"
             });
         }
 

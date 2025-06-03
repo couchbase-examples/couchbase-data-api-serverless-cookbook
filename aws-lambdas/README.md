@@ -13,9 +13,9 @@ The API provides a comprehensive Airport Information System that manages airport
 - `DELETE /airports/{airportId}` - Delete an airport document
 
 ### Airport Information Queries
-- `POST /airports/routes` - Find routes for a specific airport
-- `POST /airports/airlines` - Find airlines that service a specific airport
-- `POST /airports/hotels/nearby` - Find hotels near a specific airport using geo-spatial FTS
+- `GET /airports/routes?airportCode={airportCode}` - Find routes for a specific airport
+- `GET /airports/airlines?airportCode={airportCode}` - Find airlines that service a specific airport
+- `GET /airports/hotels/nearby?airportId={airportId}&distance={distance}` - Find hotels near a specific airport using geo-spatial FTS
 
 ## Prerequisites
 
@@ -175,30 +175,17 @@ curl -X DELETE https://your-api-gateway-url/airports/airport_1254
 
 ### Find routes for an airport
 ```bash
-curl -X POST https://your-api-gateway-url/airports/routes \
-  -H "Content-Type: application/json" \
-  -d '{
-    "airportCode": "LAX"
-  }'
+curl -X GET "https://your-api-gateway-url/airports/routes?airportCode=LAX"
 ```
 
 ### Find airlines for an airport
 ```bash
-curl -X POST https://your-api-gateway-url/airports/airlines \
-  -H "Content-Type: application/json" \
-  -d '{
-    "airportCode": "LAX"
-  }'
+curl -X GET "https://your-api-gateway-url/airports/airlines?airportCode=LAX"
 ```
 
 ### Find hotels near an airport
 ```bash
-curl -X POST https://your-api-gateway-url/airports/hotels/nearby \
-  -H "Content-Type: application/json" \
-  -d '{
-    "airportId": "airport_1254",
-    "distance": "10km"
-  }'
+curl -X GET "https://your-api-gateway-url/airports/hotels/nearby?airportId=airport_1254&distance=10km"
 ```
 
 ## Project Structure

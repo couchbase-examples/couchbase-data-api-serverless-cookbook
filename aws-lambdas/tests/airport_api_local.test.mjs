@@ -98,9 +98,9 @@ async function runTests() {
         // Test Get Airport Routes
         console.log('Testing Get Airport Routes operation...');
         const routesResult = await getAirportRoutesHandler({
-            body: JSON.stringify({
+            queryStringParameters: {
                 airportCode: 'SFO'
-            })
+            }
         });
         assert.strictEqual(routesResult.statusCode, 200, 'Get Routes should return 200');
         const routesData = JSON.parse(routesResult.body);
@@ -111,9 +111,9 @@ async function runTests() {
         // Test Get Airport Airlines
         console.log('Testing Get Airport Airlines operation...');
         const airlinesResult = await getAirportAirlinesHandler({
-            body: JSON.stringify({
+            queryStringParameters: {
                 airportCode: 'SFO'
-            })
+            }
         });
         assert.strictEqual(airlinesResult.statusCode, 200, 'Get Airlines should return 200');
         const airlinesData = JSON.parse(airlinesResult.body);
@@ -124,10 +124,10 @@ async function runTests() {
         // Test Get Hotels Near Airport
         console.log('Testing Get Hotels Near Airport operation...');
         const hotelsResult = await getHotelsNearAirportHandler({
-            body: JSON.stringify({
+            queryStringParameters: {
                 airportId: 'airport_1254',
                 distance: '10km'
-            })
+            }
         });
         assert.strictEqual(hotelsResult.statusCode, 200, 'Get Hotels should return 200');
         const hotelsData = JSON.parse(hotelsResult.body);
