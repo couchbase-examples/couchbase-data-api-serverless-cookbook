@@ -171,9 +171,8 @@ async function runTests() {
         // Test Get Airport Routes
         console.log('Testing Get Airport Routes...');
         const routesResult = await makeRequest(
-            'POST',
-            '/airports/routes',
-            { airportCode: 'SFO' }
+            'GET',
+            '/airports/routes?airportCode=SFO'
         );
         assert.strictEqual(routesResult.statusCode, 200, 'Get Routes should return 200');
         assert.ok(Array.isArray(routesResult.body.routes), 'Response should include routes array');
@@ -183,9 +182,8 @@ async function runTests() {
         // Test Get Airport Airlines
         console.log('Testing Get Airport Airlines...');
         const airlinesResult = await makeRequest(
-            'POST',
-            '/airports/airlines',
-            { airportCode: 'SFO' }
+            'GET',
+            '/airports/airlines?airportCode=SFO'
         );
         assert.strictEqual(airlinesResult.statusCode, 200, 'Get Airlines should return 200');
         assert.ok(Array.isArray(airlinesResult.body.airlines), 'Response should include airlines array');
@@ -212,12 +210,8 @@ async function runTests() {
         // Test Get Hotels Near Airport
         console.log('Testing Get Hotels Near Airport...');
         const hotelsResult = await makeRequest(
-            'POST',
-            '/airports/hotels/nearby',
-            {
-                airportId: 'airport_1254',
-                distance: '10km'
-            }
+            'GET',
+            '/airports/hotels/nearby?airportId=airport_1254&distance=10km'
         );
         assert.strictEqual(hotelsResult.statusCode, 200, 'Get Hotels should return 200');
         assert.ok(hotelsResult.body.airport, 'Response should include airport details');

@@ -11,9 +11,9 @@ const ROUTES = [
     { path: '/airports/{airportId}', method: 'POST', function: 'data-api-createAirport' },
     { path: '/airports/{airportId}', method: 'PUT', function: 'data-api-updateAirport' },
     { path: '/airports/{airportId}', method: 'DELETE', function: 'data-api-deleteAirport' },
-    { path: '/airports/routes', method: 'POST', function: 'data-api-getAirportRoutes' },
-    { path: '/airports/airlines', method: 'POST', function: 'data-api-getAirportAirlines' },
-    { path: '/airports/hotels/nearby', method: 'POST', function: 'data-api-getHotelsNearAirport' }
+    { path: '/airports/routes', method: 'GET', function: 'data-api-getAirportRoutes' },
+    { path: '/airports/airlines', method: 'GET', function: 'data-api-getAirportAirlines' },
+    { path: '/airports/hotels/nearby', method: 'GET', function: 'data-api-getHotelsNearAirport' }
 ];
 
 function executeCommand(cmd) {
