@@ -1,5 +1,3 @@
-import https from 'https';
-
 // Collection configuration
 const COLLECTION_CONFIG = {
     bucket: 'travel-sample',
@@ -65,44 +63,25 @@ export const handler = async (event) => {
         const auth = Buffer.from(`${username}:${password}`).toString('base64');
 
         // Step 1: Get airport document
-        const airportResponse = await new Promise((resolve, reject) => {
-            const options = {
-                hostname: new URL(baseUrl).hostname,
-                path: `/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}`,
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': `Basic ${auth}`
-                }
-            };
-
-            const req = https.request(options, (res) => {
-                let data = '';
-
-                res.on('data', (chunk) => {
-                    data += chunk;
-                });
-
-                res.on('end', () => {
-                    if (res.statusCode === 200) {
-                        resolve(JSON.parse(data));
-                    } else {
-                        reject({
-                            statusCode: res.statusCode,
-                            code: res.statusCode === 404 ? 'DocumentNotFound' : 'InternalError',
-                            message: `Error fetching airport: ${data}`
-                        });
-                    }
-                });
-            });
-
-            req.on('error', (error) => {
-                reject({ statusCode: 500, code: "NetworkError", message: error.message });
-            });
-
-            req.end();
+        const airportUrl = `${baseUrl}/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}`;
+        
+        const airportFetchResponse = await fetch(airportUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Basic ${auth}`
+            }
         });
 
+        if (!airportFetchResponse.ok) {
+            return formatError({
+                statusCode: airportFetchResponse.status,
+                code: airportFetchResponse.status === 404 ? 'DocumentNotFound' : 'InternalError',
+                message: `Error fetching airport: ${await airportFetchResponse.text()}`
+            });
+        }
+
+        const airportResponse = await airportFetchResponse.json();
         const { lat: latitude, lon: longitude } = airportResponse.geo;
 
         // Step 2: Search for nearby hotels using FTS
@@ -134,46 +113,27 @@ export const handler = async (event) => {
 
         const body = JSON.stringify(ftsQuery);
 
-        const ftsResponse = await new Promise((resolve, reject) => {
-            const options = {
-                hostname: new URL(baseUrl).hostname,
-                path: `/_p/fts/api/bucket/${COLLECTION_CONFIG.bucket}/scope/${COLLECTION_CONFIG.scope}/index/hotel-geo-index/query`,
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(body),
-                    'Authorization': `Basic ${auth}`
-                }
-            };
-
-            const req = https.request(options, (res) => {
-                let data = '';
-
-                res.on('data', (chunk) => {
-                    data += chunk;
-                });
-
-                res.on('end', () => {
-                    if (res.statusCode >= 200 && res.statusCode < 300) {
-                        resolve(JSON.parse(data));
-                    } else {
-                        reject({
-                            statusCode: res.statusCode,
-                            code: 'FTSError',
-                            message: `Error searching for hotels: ${data}`
-                        });
-                    }
-                });
-            });
-
-            req.on('error', (error) => {
-                reject({ statusCode: 500, code: "NetworkError", message: error.message });
-            });
-
-            req.write(body);
-            req.end();
+        const ftsUrl = `${baseUrl}/_p/fts/api/bucket/${COLLECTION_CONFIG.bucket}/scope/${COLLECTION_CONFIG.scope}/index/hotel-geo-index/query`;
+        
+        const ftsFetchResponse = await fetch(ftsUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${auth}`
+            },
+            body: body
         });
+
+        if (!ftsFetchResponse.ok) {
+            return formatError({
+                statusCode: ftsFetchResponse.status,
+                code: 'FTSError',
+                message: `Error searching for hotels: ${await ftsFetchResponse.text()}`
+            });
+        }
+
+        const ftsResponse = await ftsFetchResponse.json();
 
         // Format the response
         const hotels = ftsResponse.hits?.map(hit => ({

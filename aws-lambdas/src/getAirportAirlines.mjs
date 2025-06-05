@@ -1,5 +1,3 @@
-import https from 'https';
-
 // Collection configuration
 const COLLECTION_CONFIG = {
     bucket: 'travel-sample',
@@ -74,66 +72,46 @@ export const handler = async (event) => {
 
         const body = JSON.stringify(queryBody);
 
-        // Create the request options
-        const options = {
-            hostname: new URL(baseUrl).hostname,
-            path: '/_p/query/query/service',
+        // Make the HTTP request using fetch
+        const url = `${baseUrl}/_p/query/query/service`;
+        
+        const fetchResponse = await fetch(url, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(body),
                 'Authorization': `Basic ${auth}`
-            }
-        };
-
-        // Make the HTTP request
-        const response = await new Promise((resolve, reject) => {
-            const req = https.request(options, (res) => {
-                let data = '';
-
-                res.on('data', (chunk) => {
-                    data += chunk;
-                });
-
-                res.on('end', () => {
-                    if (res.statusCode >= 200 && res.statusCode < 300) {
-                        const queryResponse = JSON.parse(data);
-                        resolve({
-                            statusCode: 200,
-                            headers: {
-                                'content-type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                airlines: queryResponse.results,
-                                metadata: {
-                                    resultCount: queryResponse.metrics.resultCount,
-                                    executionTime: queryResponse.metrics.executionTime
-                                }
-                            }),
-                            isBase64Encoded: false
-                        });
-                    } else {
-                        const errorCode = res.statusCode === 403 ? 'InvalidAuth' :
-                                        res.statusCode === 400 ? 'InvalidArgument' : 'InternalError';
-                        resolve(formatError({
-                            statusCode: res.statusCode,
-                            code: errorCode,
-                            message: data || 'An error occurred processing the request'
-                        }));
-                    }
-                });
-            });
-
-            req.on('error', (error) => {
-                reject({ statusCode: 500, code: "NetworkError", message: error.message });
-            });
-
-            req.write(body);
-            req.end();
+            },
+            body: body
         });
 
-        return response;
+        const responseData = await fetchResponse.text();
+
+        if (fetchResponse.ok) {
+            const queryResponse = JSON.parse(responseData);
+            return {
+                statusCode: 200,
+                headers: {
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    airlines: queryResponse.results,
+                    metadata: {
+                        resultCount: queryResponse.metrics.resultCount,
+                        executionTime: queryResponse.metrics.executionTime
+                    }
+                }),
+                isBase64Encoded: false
+            };
+        } else {
+            const errorCode = fetchResponse.status === 403 ? 'InvalidAuth' :
+                            fetchResponse.status === 400 ? 'InvalidArgument' : 'InternalError';
+            return formatError({
+                statusCode: fetchResponse.status,
+                code: errorCode,
+                message: responseData || 'An error occurred processing the request'
+            });
+        }
 
     } catch (error) {
         console.error('Lambda execution error:', error);

@@ -1,5 +1,3 @@
-import https from 'https';
-
 // Collection configuration
 const COLLECTION_CONFIG = {
     bucket: 'travel-sample',
@@ -88,65 +86,45 @@ export const handler = async (event) => {
 
         const body = JSON.stringify(airportData);
 
-        // Create the request options
-        const options = {
-            hostname: new URL(baseUrl).hostname,
-            path: `/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}`,
+        // Make the HTTP request using fetch
+        const url = `${baseUrl}/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}`;
+        
+        const fetchResponse = await fetch(url, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(body),
                 'Authorization': `Basic ${auth}`
-            }
-        };
-
-        // Make the HTTP request
-        const response = await new Promise((resolve, reject) => {
-            const req = https.request(options, (res) => {
-                let data = '';
-
-                res.on('data', (chunk) => {
-                    data += chunk;
-                });
-
-                res.on('end', () => {
-                    if (res.statusCode >= 200 && res.statusCode < 300) {
-                        resolve({
-                            statusCode: 200,
-                            headers: {
-                                'content-type': 'application/json',
-                                'etag': res.headers['etag'],
-                                'x-cb-mutationtoken': res.headers['x-cb-mutationtoken']
-                            },
-                            body: JSON.stringify({
-                                message: 'Airport created successfully',
-                                id: airportId
-                            }),
-                            isBase64Encoded: false
-                        });
-                    } else {
-                        const errorCode = res.statusCode === 409 ? 'DocumentExists' :
-                                        res.statusCode === 403 ? 'InvalidAuth' :
-                                        res.statusCode === 400 ? 'InvalidArgument' : 'InternalError';
-                        resolve(formatError({
-                            statusCode: res.statusCode,
-                            code: errorCode,
-                            message: data || 'An error occurred processing the request'
-                        }));
-                    }
-                });
-            });
-
-            req.on('error', (error) => {
-                reject({ statusCode: 500, code: "NetworkError", message: error.message });
-            });
-
-            req.write(body);
-            req.end();
+            },
+            body: body
         });
 
-        return response;
+        const responseData = await fetchResponse.text();
+
+        if (fetchResponse.ok) {
+            return {
+                statusCode: 200,
+                headers: {
+                    'content-type': 'application/json',
+                    'etag': fetchResponse.headers.get('etag'),
+                    'x-cb-mutationtoken': fetchResponse.headers.get('x-cb-mutationtoken')
+                },
+                body: JSON.stringify({
+                    message: 'Airport created successfully',
+                    id: airportId
+                }),
+                isBase64Encoded: false
+            };
+        } else {
+            const errorCode = fetchResponse.status === 409 ? 'DocumentExists' :
+                            fetchResponse.status === 403 ? 'InvalidAuth' :
+                            fetchResponse.status === 400 ? 'InvalidArgument' : 'InternalError';
+            return formatError({
+                statusCode: fetchResponse.status,
+                code: errorCode,
+                message: responseData || 'An error occurred processing the request'
+            });
+        }
 
     } catch (error) {
         console.error('Lambda execution error:', error);
