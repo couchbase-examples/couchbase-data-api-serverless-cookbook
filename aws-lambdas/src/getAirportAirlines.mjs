@@ -42,13 +42,13 @@ export const handler = async (event) => {
             });
         }
 
-        // Get parameters from query string
-        const airportCode = event.queryStringParameters?.airportCode;
+        // Get parameters from path parameters
+        const airportCode = event.pathParameters?.airportCode;
         if (!airportCode) {
             return formatError({
                 statusCode: 400,
                 code: "ValidationError",
-                message: "Airport code is required as a query parameter"
+                message: "Airport code is required as a path parameter"
             });
         }
 
