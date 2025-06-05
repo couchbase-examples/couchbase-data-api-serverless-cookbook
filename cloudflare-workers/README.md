@@ -1,6 +1,6 @@
 # Cloudflare Workers API for Couchbase
 
-This project demonstrates how to build a Cloudflare Workers-based API using the **Hono framework** that interfaces with Couchbase's Data API to manage airport data from the travel-sample dataset.
+This project demonstrates how to build a Cloudflare Workers-based API using the [**Hono framework**](https://developers.cloudflare.com/workers/frameworks/framework-guides/hono/) that interfaces with Couchbase's Data API to manage airport data from the travel-sample dataset.
 
 ## Overview
 
@@ -80,6 +80,53 @@ This script creates a geo-spatial FTS index called `hotel-geo-index` that enable
 Start the development server:
 ```bash
 npm run dev
+```
+
+## Testing
+
+This project includes comprehensive unit tests for all handler functions using [Vitest](https://vitest.dev/) and the [@cloudflare/vitest-pool-workers](https://developers.cloudflare.com/workers/testing/vitest-integration/) testing framework.
+
+### Running Tests
+
+Run all tests:
+```bash
+npm run test
+```
+
+Run tests with coverage:
+```bash
+npm run test:coverage
+```
+
+Run tests in watch mode:
+```bash
+npm run test:watch
+```
+
+Run specific test categories:
+```bash
+# Run only handler tests
+npm run test:handlers
+
+# Run a specific test file
+npm test test/handlers/getHotelsNearAirport.spec.ts
+```
+
+### Test Structure
+
+```
+test/
+├── handlers/          # Handler unit tests
+│   ├── createAirport.spec.ts
+│   ├── getAirport.spec.ts
+│   ├── updateAirport.spec.ts
+│   ├── deleteAirport.spec.ts
+│   ├── getAirportRoutes.spec.ts
+│   ├── getAirportAirlines.spec.ts
+│   └── getHotelsNearAirport.spec.ts
+├── utils/             # Test utilities and helpers
+│   └── testHelpers.ts
+└── setup.ts          # Test setup configuration
 ```
 
 ## Deployment
