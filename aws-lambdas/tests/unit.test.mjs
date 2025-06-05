@@ -98,7 +98,7 @@ async function runTests() {
         // Test Get Airport Routes
         console.log('Testing Get Airport Routes operation...');
         const routesResult = await getAirportRoutesHandler({
-            queryStringParameters: {
+            pathParameters: {
                 airportCode: 'SFO'
             }
         });
@@ -111,7 +111,7 @@ async function runTests() {
         // Test Get Airport Airlines
         console.log('Testing Get Airport Airlines operation...');
         const airlinesResult = await getAirportAirlinesHandler({
-            queryStringParameters: {
+            pathParameters: {
                 airportCode: 'SFO'
             }
         });
@@ -124,7 +124,7 @@ async function runTests() {
         // Test Get Hotels Near Airport
         console.log('Testing Get Hotels Near Airport operation...');
         const hotelsResult = await getHotelsNearAirportHandler({
-            queryStringParameters: {
+            pathParameters: {
                 airportId: 'airport_1254',
                 distance: '10km'
             }

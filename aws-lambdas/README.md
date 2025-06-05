@@ -13,9 +13,9 @@ The API provides a comprehensive Airport Information System that manages airport
 - `DELETE /airports/{airportId}` - Delete an airport document
 
 ### Airport Information Queries
-- `GET /airports/routes?airportCode={airportCode}` - Find routes for a specific airport
-- `GET /airports/airlines?airportCode={airportCode}` - Find airlines that service a specific airport
-- `GET /airports/hotels/nearby?airportId={airportId}&distance={distance}` - Find hotels near a specific airport using geo-spatial FTS
+- `GET /airports/{airportCode}/routes` - Find routes for a specific airport
+- `GET /airports/{airportCode}/airlines` - Find airlines that service a specific airport
+- `GET /airports/{airportId}/hotels/nearby/{distance}` - Find hotels near a specific airport using geo-spatial FTS
 
 ## Prerequisites
 
@@ -175,39 +175,17 @@ curl -X DELETE https://your-api-gateway-url/airports/airport_1254
 
 ### Find routes for an airport
 ```bash
-curl -X GET "https://your-api-gateway-url/airports/routes?airportCode=LAX"
+curl -X GET "https://your-api-gateway-url/airports/LAX/routes"
 ```
 
 ### Find airlines for an airport
 ```bash
-curl -X GET "https://your-api-gateway-url/airports/airlines?airportCode=LAX"
+curl -X GET "https://your-api-gateway-url/airports/LAX/airlines"
 ```
 
 ### Find hotels near an airport
 ```bash
-curl -X GET "https://your-api-gateway-url/airports/hotels/nearby?airportId=airport_1254&distance=10km"
-```
-
-## Project Structure
-
-```
-aws-lambdas/
-├── src/                   # Lambda function handlers
-│   ├── createAirport.mjs
-│   ├── getAirport.mjs
-│   ├── updateAirport.mjs
-│   ├── deleteAirport.mjs
-│   ├── getAirportRoutes.mjs
-│   ├── getAirportAirlines.mjs
-│   └── getHotelsNearAirport.mjs
-├── scripts/               # Deployment scripts
-│   ├── deploy_airport_lambda_functions.mjs
-│   ├── deploy_api_gateway_with_integrations.mjs
-│   └── create-fts-index.mjs
-├── tests/                 # Test suites
-│   ├── airport_api_local.test.mjs
-│   └── airport_api_aws.test.mjs
-└── README.md
+curl -X GET "https://your-api-gateway-url/airports/airport_1254/hotels/nearby/10km"
 ```
 
 ## License

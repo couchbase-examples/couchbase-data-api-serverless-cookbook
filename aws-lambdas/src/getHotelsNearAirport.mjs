@@ -43,15 +43,15 @@ export const handler = async (event) => {
             });
         }
 
-        // Get parameters from query string
-        const airportId = event.queryStringParameters?.airportId;
-        const distance = event.queryStringParameters?.distance || "5km";
+        // Get parameters from path parameters
+        const airportId = event.pathParameters?.airportId;
+        const distance = event.pathParameters?.distance || "5km";
 
         if (!airportId) {
             return formatError({
                 statusCode: 400,
                 code: "ValidationError",
-                message: "Airport ID is required as a query parameter"
+                message: "Airport ID is required as a path parameter"
             });
         }
 
