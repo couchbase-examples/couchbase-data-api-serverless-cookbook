@@ -13,11 +13,11 @@ The API provides a comprehensive Airport Information System that manages airport
 - `DELETE /airports/{document_key}` - Delete an airport document
 
 ### Airport Information Queries
-- `GET /airports/routes` - Find routes for a specific airport
-- `GET /airports/airlines` - Find airlines that service a specific airport
+- `GET /airports/{airport_code}/routes` - Find routes for a specific airport
+- `GET /airports/{airport_code}/airlines` - Find airlines that service a specific airport
 
 ### Full Text Search (FTS) Features
-- `GET /airports/hotels/nearby` - Find hotels near a specific airport using geo-spatial FTS
+- `GET /airports/{airport_id}/hotels/nearby/{distance}` - Find hotels near a specific airport within a specific distance
 
 **Note:** The FTS features require:
 1. A Full Text Search index with geo-spatial mapping on hotel documents
@@ -117,22 +117,22 @@ curl -X DELETE https://your-worker.your-subdomain.workers.dev/airports/airport_1
 
 ### Find routes for an airport
 ```bash
-curl https://your-worker.your-subdomain.workers.dev/airports/routes?airportCode=LAX
+curl https://your-worker.your-subdomain.workers.dev/airports/LAX/routes
 ```
 
 ### Find airlines for an airport
 ```bash
-curl https://your-worker.your-subdomain.workers.dev/airports/airlines?airportCode=LAX
+curl https://your-worker.your-subdomain.workers.dev/airports/LAX/airlines
 ```
 
-### Find hotels near an airport
+### Find hotels near an airport with specific distance
 ```bash
-curl "https://your-worker.your-subdomain.workers.dev/airports/hotels/nearby?airportId=airport_1254&distance=10km"
+curl "https://your-worker.your-subdomain.workers.dev/airports/airport_1254/hotels/nearby/50km"
 ```
 
-**Query Parameters:**
-- `airportId`: Airport document ID (required) - e.g., airport_1254, airport_1255
-- `distance`: Search radius (optional, default: "5km")
+**Path Parameters:**
+- `airport_id`: Airport document ID (required) - e.g., airport_1254, airport_1255
+- `distance`: Search radius (required) - e.g., 50km, 10km
 
 **Prerequisites:** Make sure you have created the FTS index using the provided script before using this endpoint.
 

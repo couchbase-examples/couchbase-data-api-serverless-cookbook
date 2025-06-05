@@ -15,30 +15,31 @@ interface FTSResponse {
 	total_hits?: number;
 }
 
-export const getHotelsNearAirport = async (c: Context<{ Bindings: Env }>) => {
+export const getHotelsNearAirport = async (c: Context) => {
 	try {
-		const airportId = c.req.query('airportId');
-		const distance = c.req.query('distance') || "5km";
+		const airportId = c.req.param('airportId');
+		const distance = c.req.param('distance');
+		const env = c.env as Env;
 
 		// Validate input
 		if (!airportId || typeof airportId !== 'string') {
 			return new Response(
 				JSON.stringify({ 
-					error: 'Missing required query parameter: airportId',
-					example: '/airports/hotels/nearby?airportId=airport_1254&distance=5km'
+					error: 'Missing required path parameters: airportId and distance are both mandatory',
+					example: '/airports/airport_1254/hotels/nearby/50km'
 				}),
 				{ status: 400, headers: { 'Content-Type': 'application/json' } }
 			);
 		}
 
 		// Step 1: Get airport document by ID
-		const documentUrl = getDocumentUrl(c.env, airportId);
+		const documentUrl = getDocumentUrl(env, airportId);
 		
 		console.log(`Fetching airport data using GET: ${documentUrl}`);
 
 		const airportResponse = await fetch(documentUrl, {
 			method: 'GET',
-			headers: getAuthHeaders(c.env)
+			headers: getAuthHeaders(env)
 		});
 
 		if (!airportResponse.ok) {
@@ -71,7 +72,7 @@ export const getHotelsNearAirport = async (c: Context<{ Bindings: Env }>) => {
 
 		// Step 2: Search for nearby hotels using FTS
 		const indexName = 'hotel-geo-index';
-		const ftsUrl = getFTSSearchUrl(c.env, indexName);
+		const ftsUrl = getFTSSearchUrl(env, indexName);
 
 		// Construct FTS geo-distance query using standard format
 		const ftsQuery = {
@@ -105,7 +106,7 @@ export const getHotelsNearAirport = async (c: Context<{ Bindings: Env }>) => {
 
 		const ftsResponse = await fetch(ftsUrl, {
 			method: 'POST',
-			headers: getAuthHeaders(c.env),
+			headers: getAuthHeaders(env),
 			body: JSON.stringify(ftsQuery)
 		});
 

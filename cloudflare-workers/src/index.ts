@@ -8,8 +8,8 @@ import { getAirportRoutes } from './handlers/getAirportRoutes';
 import { getAirportAirlines } from './handlers/getAirportAirlines';
 import { getHotelsNearAirport } from './handlers/getHotelsNearAirport';
 
-// Create Hono app
-const app = new Hono<{ Bindings: Env }>();
+// Create Hono app without binding env to context
+const app = new Hono();
 
 // Root route
 app.get('/', (c) => {
@@ -19,13 +19,13 @@ app.get('/', (c) => {
 });
 
 // Find hotels near a specific airport (FTS)
-app.get('/airports/hotels/nearby', getHotelsNearAirport);
+app.get('/airports/:airportId/hotels/nearby/:distance', getHotelsNearAirport);
 
 // Find routes for a specific airport
-app.get('/airports/routes', getAirportRoutes);
+app.get('/airports/:airportCode/routes', getAirportRoutes);
 
 // Find airlines that service a specific airport
-app.get('/airports/airlines', getAirportAirlines);
+app.get('/airports/:airportCode/airlines', getAirportAirlines);
 
 // Get airport
 app.get('/airports/:documentKey', getAirport);

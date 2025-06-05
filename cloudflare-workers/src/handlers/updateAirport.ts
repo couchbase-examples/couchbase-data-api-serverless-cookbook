@@ -3,9 +3,10 @@ import { AirportDocument } from '../types/airport';
 import { Env } from '../types/env';
 import { getAuthHeaders, getDocumentUrl } from '../utils/couchbase';
 
-export const updateAirport = async (c: Context<{ Bindings: Env }>) => {
+export const updateAirport = async (c: Context) => {
 	try {
 		const documentKey = c.req.param('documentKey');
+		const env = c.env as Env;
 		
 		let airportData: AirportDocument;
 		try {
@@ -17,12 +18,12 @@ export const updateAirport = async (c: Context<{ Bindings: Env }>) => {
 			);
 		}
 		
-		const url = getDocumentUrl(c.env, documentKey);
+		const url = getDocumentUrl(env, documentKey);
 		
 		console.log(`Making PUT request to: ${url}`);
 		const response = await fetch(url, {
 			method: 'PUT',
-			headers: getAuthHeaders(c.env),
+			headers: getAuthHeaders(env),
 			body: JSON.stringify(airportData),
 		});
 		

@@ -2,15 +2,16 @@ import { Context } from 'hono';
 import { Env } from '../types/env';
 import { getAuthHeaders, getQueryUrl } from '../utils/couchbase';
 
-export const getAirportAirlines = async (c: Context<{ Bindings: Env }>) => {
+export const getAirportAirlines = async (c: Context) => {
 	try {
-		const airportCode = c.req.query('airportCode');
+		const airportCode = c.req.param('airportCode');
+		const env = c.env as Env;
 		
 		if (!airportCode) {
 			return new Response(
 				JSON.stringify({ 
-					error: 'Missing required query parameter: airportCode',
-					example: '/airports/airlines?airportCode=LAX'
+					error: 'Missing required path parameter: airportCode',
+					example: '/airports/LAX/airlines'
 				}),
 				{ status: 400, headers: { 'Content-Type': 'application/json' } }
 			);
@@ -30,14 +31,14 @@ export const getAirportAirlines = async (c: Context<{ Bindings: Env }>) => {
 			args
 		};
 		
-		const url = getQueryUrl(c.env);
+		const url = getQueryUrl(env);
 		console.log(`Making query request to: ${url}`);
 		console.log(`Query: ${statement}`);
 		console.log(`Args: ${JSON.stringify(args)}`);
 		
 		const response = await fetch(url, {
 			method: 'POST',
-			headers: getAuthHeaders(c.env),
+			headers: getAuthHeaders(env),
 			body: JSON.stringify(queryBody)
 		});
 		

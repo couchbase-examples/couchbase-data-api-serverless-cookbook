@@ -2,15 +2,16 @@ import { Context } from 'hono';
 import { Env } from '../types/env';
 import { getAuthHeaders, getDocumentUrl } from '../utils/couchbase';
 
-export const deleteAirport = async (c: Context<{ Bindings: Env }>) => {
+export const deleteAirport = async (c: Context) => {
 	try {
 		const documentKey = c.req.param('documentKey');
-		const url = getDocumentUrl(c.env, documentKey);
+		const env = c.env as Env;
+		const url = getDocumentUrl(env, documentKey);
 		
 		console.log(`Making DELETE request to: ${url}`);
 		const response = await fetch(url, {
 			method: 'DELETE',
-			headers: getAuthHeaders(c.env),
+			headers: getAuthHeaders(env),
 		});
 		
 		if (!response.ok && response.status !== 204) {
