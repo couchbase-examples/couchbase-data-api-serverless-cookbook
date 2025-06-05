@@ -15,20 +15,20 @@ interface FTSResponse {
 	total_hits?: number;
 }
 
-export const getHotelsNearAirport = async (c: Context) => {
+export const getHotelsNearAirport = async (c: Context<{ Bindings: Env }>) => {
 	try {
 		const airportId = c.req.param('airportId');
 		const distance = c.req.param('distance');
-		const env = c.env as Env;
+		const env = c.env;
 
 		// Validate input
 		if (!airportId || typeof airportId !== 'string') {
-			return new Response(
-				JSON.stringify({ 
+			return c.json(
+				{ 
 					error: 'Missing required path parameters: airportId and distance are both mandatory',
 					example: '/airports/airport_1254/hotels/nearby/50km'
-				}),
-				{ status: 400, headers: { 'Content-Type': 'application/json' } }
+				},
+				400
 			);
 		}
 
@@ -47,21 +47,21 @@ export const getHotelsNearAirport = async (c: Context) => {
 			console.error(`Airport GET API Error (${airportResponse.status}): ${errorBody}`);
 			
 			if (airportResponse.status === 404) {
-				return new Response(
-					JSON.stringify({ 
+				return c.json(
+					{ 
 						error: `Airport not found: ${airportId}`,
 						detail: "No airport document found with the specified document ID"
-					}),
-					{ status: 404, headers: { 'Content-Type': 'application/json' } }
+					},
+					404
 				);
 			}
 			
-			return new Response(
-				JSON.stringify({ 
+			return c.json(
+				{ 
 					error: `Error fetching airport: ${airportId}`,
 					detail: errorBody
-				}),
-				{ status: airportResponse.status, headers: { 'Content-Type': 'application/json' } }
+				},
+				airportResponse.status as any
 			);
 		}
 
@@ -113,13 +113,13 @@ export const getHotelsNearAirport = async (c: Context) => {
 		if (!ftsResponse.ok) {
 			const errorBody = await ftsResponse.text();
 			console.error(`FTS API Error (${ftsResponse.status}): ${errorBody}`);
-			return new Response(
-				JSON.stringify({ 
+			return c.json(
+				{ 
 					error: `Error searching for nearby hotels: ${ftsResponse.statusText}`,
 					detail: errorBody,
 					note: "Make sure the 'hotel-geo-index' FTS index exists with geo mapping for the 'geo' field"
-				}),
-				{ status: ftsResponse.status, headers: { 'Content-Type': 'application/json' } }
+				},
+				ftsResponse.status as any
 			);
 		}
 
@@ -135,36 +135,33 @@ export const getHotelsNearAirport = async (c: Context) => {
 			};
 		}) || [];
 
-		return new Response(
-			JSON.stringify({
-				airport: {
-					id: airportId,
-					code: airportData.faa || airportData.icao,
-					name: airportData.airportname,
-					city: airportData.city,
-					country: airportData.country,
-					coordinates: {
-						latitude,
-						longitude
-					}
-				},
-				search_criteria: {
-					distance
-				},
-				total_hotels_found: ftsData.total_hits || 0,
-				hotels: hotels
-			}),
-			{ status: 200, headers: { 'Content-Type': 'application/json' } }
-		);
+		return c.json({
+			airport: {
+				id: airportId,
+				code: airportData.faa || airportData.icao,
+				name: airportData.airportname,
+				city: airportData.city,
+				country: airportData.country,
+				coordinates: {
+					latitude,
+					longitude
+				}
+			},
+			search_criteria: {
+				distance
+			},
+			total_hotels_found: ftsData.total_hits || 0,
+			hotels: hotels
+		});
 
 	} catch (error: any) {
 		console.error("Error in airport hotel search:", error);
-		return new Response(
-			JSON.stringify({ 
+		return c.json(
+			{ 
 				error: error.message,
 				note: "This endpoint requires a Full Text Search index with geo-spatial mapping"
-			}),
-			{ status: 500, headers: { 'Content-Type': 'application/json' } }
+			},
+			500
 		);
 	}
 }; 

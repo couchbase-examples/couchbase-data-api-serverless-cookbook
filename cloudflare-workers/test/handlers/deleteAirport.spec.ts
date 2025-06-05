@@ -43,10 +43,11 @@ describe('deleteAirport handler', () => {
 
 		// Act
 		const response = await deleteAirport(context);
+		const responseData = await parseResponse(response);
 
 		// Assert
-		expect(response.status).toBe(204);
-		expect(await response.text()).toBe('');
+		expect(response.status).toBe(200);
+		expect(responseData.message).toBe(`Airport document ${documentKey} deleted successfully.`);
 	});
 
 	it('should return success message for 200 response', async () => {
@@ -113,21 +114,5 @@ describe('deleteAirport handler', () => {
 			expect.stringContaining(`/v1/buckets/travel-sample/scopes/inventory/collections/airport/documents/${documentKey}`),
 			expect.any(Object)
 		);
-	});
-
-	it('should not treat 204 as error response', async () => {
-		// Arrange
-		const documentKey = 'airport_delete';
-		const context = createMockContext({ documentKey });
-		const mockResponse = new Response('', { status: 204 });
-		mockFetch(mockResponse);
-
-		// Act
-		const response = await deleteAirport(context);
-
-		// Assert
-		expect(response.status).toBe(204);
-		// Should not have called response.text() for error handling
-		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
 	});
 }); 

@@ -68,9 +68,17 @@ export const createMockContext = (
 		json: vi.fn().mockResolvedValue(body),
 	};
 
+	const mockJson = vi.fn((data: any, status?: number) => {
+		return new Response(JSON.stringify(data), {
+			status: status || 200,
+			headers: { 'Content-Type': 'application/json' },
+		});
+	});
+
 	return {
 		req: mockRequest,
 		env: mockEnv,
+		json: mockJson,
 	} as any;
 };
 

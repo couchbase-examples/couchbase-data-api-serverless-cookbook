@@ -8,8 +8,8 @@ import { getAirportRoutes } from './handlers/getAirportRoutes';
 import { getAirportAirlines } from './handlers/getAirportAirlines';
 import { getHotelsNearAirport } from './handlers/getHotelsNearAirport';
 
-// Create Hono app without binding env to context
-const app = new Hono();
+// Create Hono app with proper environment bindings
+const app = new Hono<{ Bindings: Env }>();
 
 // Root route
 app.get('/', (c) => {

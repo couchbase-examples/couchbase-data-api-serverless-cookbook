@@ -2,18 +2,18 @@ import { Context } from 'hono';
 import { Env } from '../types/env';
 import { getAuthHeaders, getQueryUrl } from '../utils/couchbase';
 
-export const getAirportAirlines = async (c: Context) => {
+export const getAirportAirlines = async (c: Context<{ Bindings: Env }>) => {
 	try {
 		const airportCode = c.req.param('airportCode');
-		const env = c.env as Env;
+		const env = c.env;
 		
 		if (!airportCode) {
-			return new Response(
-				JSON.stringify({ 
+			return c.json(
+				{ 
 					error: 'Missing required path parameter: airportCode',
 					example: '/airports/LAX/airlines'
-				}),
-				{ status: 400, headers: { 'Content-Type': 'application/json' } }
+				},
+				400
 			);
 		}
 
@@ -45,22 +45,19 @@ export const getAirportAirlines = async (c: Context) => {
 		if (!response.ok) {
 			const errorBody = await response.text();
 			console.error(`Query API Error (${response.status}): ${errorBody}`);
-			return new Response(
-				JSON.stringify({ error: `Error executing airlines query: ${response.statusText}. Detail: ${errorBody}` }),
-				{ status: response.status, headers: { 'Content-Type': 'application/json' } }
+			return c.json(
+				{ error: `Error executing airlines query: ${response.statusText}. Detail: ${errorBody}` },
+				response.status as any
 			);
 		}
 		
-		const data = await response.json();
-		return new Response(
-			JSON.stringify(data),
-			{ status: 200, headers: { 'Content-Type': 'application/json' } }
-		);
+		const data = await response.json() as any;
+		return c.json(data);
 	} catch (error: any) {
 		console.error("Error executing airlines query:", error);
-		return new Response(
-			JSON.stringify({ error: error.message }),
-			{ status: 500, headers: { 'Content-Type': 'application/json' } }
+		return c.json(
+			{ error: error.message },
+			500
 		);
 	}
 }; 
