@@ -4,21 +4,16 @@ import { getAuthHeaders, getQueryUrl } from '../utils/couchbase';
 
 export const getAirportAirlines = async (c: Context<{ Bindings: Env }>) => {
 	try {
-		let requestBody: { airportCode: string };
+		const airportCode = c.req.param('airportCode');
+		const env = c.env;
 		
-		try {
-			requestBody = await c.req.json();
-		} catch (e) {
-			return new Response(
-				JSON.stringify({ error: 'Invalid JSON in request body' }),
-				{ status: 400, headers: { 'Content-Type': 'application/json' } }
-			);
-		}
-
-		if (!requestBody.airportCode) {
-			return new Response(
-				JSON.stringify({ error: 'Missing required field: airportCode' }),
-				{ status: 400, headers: { 'Content-Type': 'application/json' } }
+		if (!airportCode) {
+			return c.json(
+				{ 
+					error: 'Missing required path parameter: airportCode',
+					example: '/airports/LAX/airlines'
+				},
+				400
 			);
 		}
 
@@ -29,43 +24,40 @@ export const getAirportAirlines = async (c: Context<{ Bindings: Env }>) => {
 			ORDER BY r.airline
 		`;
 		
-		const args = [requestBody.airportCode, requestBody.airportCode];
+		const args = [airportCode, airportCode];
 		
 		const queryBody = {
 			statement,
 			args
 		};
 		
-		const url = getQueryUrl(c.env);
+		const url = getQueryUrl(env);
 		console.log(`Making query request to: ${url}`);
 		console.log(`Query: ${statement}`);
 		console.log(`Args: ${JSON.stringify(args)}`);
 		
 		const response = await fetch(url, {
 			method: 'POST',
-			headers: getAuthHeaders(c.env),
+			headers: getAuthHeaders(env),
 			body: JSON.stringify(queryBody)
 		});
 		
 		if (!response.ok) {
 			const errorBody = await response.text();
 			console.error(`Query API Error (${response.status}): ${errorBody}`);
-			return new Response(
-				JSON.stringify({ error: `Error executing airlines query: ${response.statusText}. Detail: ${errorBody}` }),
-				{ status: response.status, headers: { 'Content-Type': 'application/json' } }
+			return c.json(
+				{ error: `Error executing airlines query: ${response.statusText}. Detail: ${errorBody}` },
+				response.status as any
 			);
 		}
 		
-		const data = await response.json();
-		return new Response(
-			JSON.stringify(data),
-			{ status: 200, headers: { 'Content-Type': 'application/json' } }
-		);
+		const data = await response.json() as any;
+		return c.json(data);
 	} catch (error: any) {
 		console.error("Error executing airlines query:", error);
-		return new Response(
-			JSON.stringify({ error: error.message }),
-			{ status: 500, headers: { 'Content-Type': 'application/json' } }
+		return c.json(
+			{ error: error.message },
+			500
 		);
 	}
 }; 
