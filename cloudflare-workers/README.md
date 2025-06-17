@@ -2,23 +2,6 @@
 
 This project demonstrates how to build a Cloudflare Workers-based API using the [**Hono framework**](https://developers.cloudflare.com/workers/frameworks/framework-guides/hono/) that interfaces with Couchbase's Data API to manage airport data from the travel-sample dataset.
 
-## Overview
-
-The API provides a comprehensive Airport Information System that manages airport data and provides related travel information from the Couchbase travel-sample dataset:
-
-### Airport Management (CRUD Operations)
-- `GET /airports/{document_key}` - Retrieve an airport document
-- `POST /airports/{document_key}` - Create a new airport document
-- `PUT /airports/{document_key}` - Update an existing airport document
-- `DELETE /airports/{document_key}` - Delete an airport document
-
-### Airport Information Queries
-- `GET /airports/{airport_code}/routes` - Find routes for a specific airport
-- `GET /airports/{airport_code}/airlines` - Find airlines that service a specific airport
-
-### Full Text Search (FTS) Features
-- `GET /airports/{airport_id}/hotels/nearby/{distance}` - Find hotels near a specific airport within a specific distance
-
 **Note:** The FTS features require:
 1. A Full Text Search index with geo-spatial mapping on hotel documents
 2. The travel-sample dataset with hotel documents in the `inventory.hotel` collection
@@ -43,40 +26,16 @@ cd cloudflare-workers
 ```bash
 npm install
 ```
-4. Configure your database (see Database Configuration section)
-5. Configure your environment variables (see Deployment section for details)
+4. Configure your database (see [Database Configuration](../README.md#database-configuration) in the main README)
+5. Configure your environment variables (see [Deployment section](#deployment) for details)
 
-## Database Configuration
 
-Setup Database Configuration
-To know more about connecting to your Capella cluster, please follow the [instructions](https://docs.couchbase.com/cloud/get-started/connect.html).
-
-Specifically, you need to do the following:
-
-1. Create [database credentials](https://docs.couchbase.com/cloud/clusters/manage-database-users.html) to access the travel-sample bucket (Read and Write) used in the application.
-2. [Allow access](https://docs.couchbase.com/cloud/clusters/allow-ip-address.html) to the Cluster from the IP on which the application is running.
 
 ## FTS Index Setup
 
-Before using the hotel search functionality, you need to create a Full Text Search index. A script is provided to create the required geo-spatial FTS index:
+Before using the hotel search functionality, you need to create a Full Text Search index. Use the Node.js script provided in the root of the repository.
 
-### Using the FTS Index Creation Script
-
-1. Set your environment variables:
-```bash
-export DATA_API_USERNAME="your_username"
-export DATA_API_PASSWORD="your_password"
-export DATA_API_ENDPOINT="your_endpoint"
-```
-
-2. Run the script to create the FTS index:
-```bash
-./scripts/create-fts-index.sh
-```
-
-This script creates a geo-spatial FTS index called `hotel-geo-index` that enables proximity searches on hotel documents. The index must be created before using the hotel search functionality.
-
-**Note:** The index creation is a one-time setup process. Once created, the index will be built in the background and will be ready for use with the hotel search endpoint.
+See [../scripts/README.md](../scripts/README.md) for detailed instructions on creating the required `hotel-geo-index` for geo-spatial hotel searches.
 
 ## Development
 
@@ -151,58 +110,11 @@ wrangler secret put DATA_API_ENDPOINT
 npm run deploy
 ```
 
-## API Examples
 
-### Get an airport
-```bash
-curl https://your-worker.your-subdomain.workers.dev/airports/airport_1254
-```
-
-### Create an airport
-```bash
-curl -X POST https://your-worker.your-subdomain.workers.dev/airports/airport_new \
-  -H "Content-Type: application/json" \
-  -d '{"airportname": "Test Airport", "city": "Test City", "country": "Test Country", "faa": "TST", "geo": {"alt": 100, "lat": 34.0522, "lon": -118.2437}, "icao": "KTST", "id": 9999, "type": "airport", "tz": "America/Los_Angeles"}'
-```
-
-### Update an airport
-```bash
-curl -X PUT https://your-worker.your-subdomain.workers.dev/airports/airport_1254 \
-  -H "Content-Type: application/json" \
-  -d '{"airportname": "Updated Airport", "city": "Updated City", "country": "Updated Country", "faa": "UPD", "geo": {"alt": 200, "lat": 35.0522, "lon": -119.2437}, "icao": "KUPD", "id": 1254, "type": "airport", "tz": "America/Los_Angeles"}'
-```
-
-### Delete an airport
-```bash
-curl -X DELETE https://your-worker.your-subdomain.workers.dev/airports/airport_1254
-```
-
-### Find routes for an airport
-```bash
-curl https://your-worker.your-subdomain.workers.dev/airports/LAX/routes
-```
-
-### Find airlines for an airport
-```bash
-curl https://your-worker.your-subdomain.workers.dev/airports/LAX/airlines
-```
-
-### Find hotels near an airport with specific distance
-```bash
-curl "https://your-worker.your-subdomain.workers.dev/airports/airport_1254/hotels/nearby/50km"
-```
-
-**Path Parameters:**
-- `airport_id`: Airport document ID (required) - e.g., airport_1254, airport_1255
-- `distance`: Search radius (required) - e.g., 50km, 10km
-
-**Prerequisites:** Make sure you have created the FTS index using the provided script before using this endpoint.
 
 ## Project Structure
 
 ```
-scripts/               # Utility scripts
-└── create-fts-index.sh # Script to create FTS index for hotel search
 src/
 ├── handlers/          # API route handlers
 │   ├── createAirport.ts
@@ -231,7 +143,3 @@ test/
 │   └── testHelpers.ts
 └── setup.ts           # Test setup configuration
 ```
-
-## License
-
-Apache 2.0 
