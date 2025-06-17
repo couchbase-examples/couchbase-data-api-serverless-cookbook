@@ -9,7 +9,7 @@ This provides a comprehensive Airport Information System that manages airport da
 ### Architecture Diagrams
 
 #### Cloudflare Workers
-![Cloudflare Workers Architecture](./assets/cloudflare-workers.svg)
+![Cloudflare Workers Architecture](./assets/cloudflare-workers.png)
 
 #### AWS Lambda
 *Architecture diagram will be added*
