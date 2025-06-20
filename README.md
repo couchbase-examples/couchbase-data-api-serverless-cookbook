@@ -6,13 +6,24 @@ This tutorial demonstrates how to work with Couchbase's Data API to manage airpo
 
 This provides a comprehensive Airport Information System that manages airport data and provides related travel information from the Couchbase travel-sample dataset.
 
+## Platform Tutorials
+
+Choose your preferred serverless platform to get started:
+
+- **AWS Lambda**: [View Tutorial](./aws-lambdas/README.md)
+- **Cloudflare Workers**: [View Tutorial](./cloudflare-workers/README.md)
+
+### Coming Soon
+- **Azure Functions**
+- **Google Cloud Functions**
+
 ### Architecture Diagrams
 
 #### Cloudflare Workers
 ![Cloudflare Workers Architecture](./assets/cloudflare-workers.png)
 
 #### AWS Lambda
-*Architecture diagram will be added*
+![AWS Lambda Architecture](./assets/aws-lambdas.png)
 
 ### Core Features
 

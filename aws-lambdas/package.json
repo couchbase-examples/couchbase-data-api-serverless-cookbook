@@ -7,8 +7,7 @@
     "deploy-airport-lambdas": "env-cmd -f .env node scripts/deploy_airport_lambda_functions.mjs",
     "deploy-airport-api": "env-cmd -f .env node scripts/deploy_api_gateway_with_integrations.mjs",
     "test-unit": "env-cmd -f .env node tests/unit.test.mjs",
-    "test-integration": "env-cmd -f .env node tests/integration.test.mjs",
-    "create-fts-index": "env-cmd -f .env ./scripts/create-fts-index.sh"
+    "test-integration": "env-cmd -f .env node tests/integration.test.mjs"
   },
   "author": "Viraj Agarwal",
   "description": "AWS Lambdas for the Couchbase Data API Serverless Cookbook",
