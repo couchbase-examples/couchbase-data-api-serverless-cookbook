@@ -2,6 +2,10 @@
 
 This project demonstrates how to build a serverless API using **AWS Lambda and API Gateway** that interfaces with Couchbase's Data API to manage airport data from the travel-sample dataset.
 
+## Architecture
+
+![AWS Lambda Architecture](../assets/aws-lambdas.png)
+
 ## Overview
 
 The API provides a comprehensive Airport Information System that manages airport data and provides related travel information from the Couchbase travel-sample dataset:

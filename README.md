@@ -12,7 +12,7 @@ This provides a comprehensive Airport Information System that manages airport da
 ![Cloudflare Workers Architecture](./assets/cloudflare-workers.png)
 
 #### AWS Lambda
-*Architecture diagram will be added*
+![AWS Lambda Architecture](./assets/aws-lambdas.png)
 
 ### Core Features
 
