@@ -2,32 +2,18 @@
 
 This project demonstrates how to build a serverless API using **AWS Lambda and API Gateway** that interfaces with Couchbase's Data API to manage airport data from the travel-sample dataset.
 
-## Architecture
-
-![AWS Lambda Architecture](../assets/aws-lambdas.png)
-
-## Overview
-
-The API provides a comprehensive Airport Information System that manages airport data and provides related travel information from the Couchbase travel-sample dataset:
-
-### Airport Management (CRUD Operations)
-- `GET /airports/{airportId}` - Retrieve an airport document
-- `POST /airports/{airportId}` - Create a new airport document
-- `PUT /airports/{airportId}` - Update an existing airport document
-- `DELETE /airports/{airportId}` - Delete an airport document
-
-### Airport Information Queries
-- `GET /airports/{airportCode}/routes` - Find routes for a specific airport
-- `GET /airports/{airportCode}/airlines` - Find airlines that service a specific airport
-- `GET /airports/{airportId}/hotels/nearby/{distance}` - Find hotels near a specific airport using geo-spatial FTS
+Note: The FTS features require:
+1. A Full Text Search index with geo-spatial mapping on hotel documents
+2. The travel-sample dataset with hotel documents in the inventory.hotel collection
+3. Hotels must have geo coordinates (`geo.lat` and `geo.lon` fields) for proximity search
 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v22.x or later)
 - [AWS CLI](https://aws.amazon.com/cli/) configured with appropriate credentials
-- AWS IAM Role with Lambda and API Gateway permissions
-- Couchbase Server with Data API enabled
-- Couchbase travel-sample bucket loaded
+- [AWS IAM Role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) with Lambda and API Gateway permissions
+- [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with Data API enabled
+- Couchbase [travel-sample bucket](https://docs.couchbase.com/dotnet-sdk/current/ref/travel-app-data-model.html) loaded
 
 ## Setup
 
@@ -64,15 +50,52 @@ The API provides a comprehensive Airport Information System that manages airport
 
 ## FTS Index Setup
 
-Before using the hotel search functionality, you need to create a Full Text Search index:
+Before using the hotel search functionality, you need to create a Full Text Search index. Use the Node.js script provided in the root of the repository.
 
+See [../scripts/README.md](../scripts/README.md) for detailed instructions on creating the required `hotel-geo-index` for geo-spatial hotel searches.
+
+## Testing
+
+### Local Testing
+
+Run the local test suite:
 ```bash
-node ../scripts/create-fts-index.js
+npm run test-airport-api-local
 ```
 
-This creates a geo-spatial FTS index called `hotel-geo-index` that enables proximity searches for hotels near airports. The index will be built in the background and will be ready for use shortly after creation.
+### API Gateway Integration Testing
+
+The integration tests will automatically discover your API Gateway endpoint and test all API operations through it:
+
+```bash
+npm run test-airport-api-aws
+```
+
+This will:
+- Automatically find your API Gateway endpoint
+- Test all API operations end-to-end
+- Verify response formats and status codes
+- Test error handling and edge cases
 
 ## Deployment
+
+### Authentication
+
+Before deploying, ensure your AWS CLI is properly authenticated. 
+
+**Note:** This guide uses **IAM user long-term credentials** with `aws configure` as it's the easiest method to get started. However, [AWS does not recommend this approach](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-authentication.html) for production environments due to security considerations. For production deployments, consider using [IAM Identity Center short-term credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html) or other more secure authentication methods.
+
+#### Setup with AWS Configure
+```bash
+aws configure
+```
+This will prompt you for:
+- AWS Access Key ID
+- AWS Secret Access Key  
+- Default region name
+- Default output format (json recommended)
+
+For detailed instructions on creating IAM users and access keys, see the [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-authentication-user.html).
 
 ### Deploy Lambda Functions
 
@@ -100,98 +123,26 @@ This script will:
 4. Create a default stage
 5. Output the API endpoint URL
 
-## Testing
+## Project Structure
 
-### Local Testing
+Here's the structure of the aws-lambdas directory containing Lambda functions, deployment scripts, and tests:
 
-Run the local test suite:
-```bash
-npm run test-airport-api-local
 ```
-
-### API Gateway Integration Testing
-
-The integration tests will automatically discover your API Gateway endpoint and test all API operations through it:
-
-```bash
-npm run test-airport-api-aws
+aws-lambdas/
+├── package.json                          # Dependencies and command definitions
+├── README.md                             
+├── scripts/                              # Deployment automation
+│   ├── deploy_airport_lambda_functions.mjs
+│   └── deploy_api_gateway_with_integrations.mjs
+├── src/                                  # Lambda function handlers
+│   ├── createAirport.mjs
+│   ├── deleteAirport.mjs
+│   ├── getAirport.mjs
+│   ├── getAirportAirlines.mjs
+│   ├── getAirportRoutes.mjs
+│   ├── getHotelsNearAirport.mjs
+│   └── updateAirport.mjs
+└── tests/                                # Test suites
+    ├── integration.test.mjs
+    └── unit.test.mjs
 ```
-
-This will:
-- Automatically find your API Gateway endpoint
-- Test all API operations end-to-end
-- Verify response formats and status codes
-- Test error handling and edge cases
-
-## API Examples
-
-### Get an airport
-```bash
-curl https://your-api-gateway-url/airports/airport_1254
-```
-
-### Create an airport
-```bash
-curl -X POST https://your-api-gateway-url/airports/airport_new \
-  -H "Content-Type: application/json" \
-  -d '{
-    "airportname": "Test Airport",
-    "city": "Test City",
-    "country": "Test Country",
-    "faa": "TST",
-    "geo": {
-      "alt": 100,
-      "lat": 34.0522,
-      "lon": -118.2437
-    },
-    "icao": "KTST",
-    "id": 9999,
-    "type": "airport",
-    "tz": "America/Los_Angeles"
-  }'
-```
-
-### Update an airport
-```bash
-curl -X PUT https://your-api-gateway-url/airports/airport_1254 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "airportname": "Updated Airport",
-    "city": "Updated City",
-    "country": "Updated Country",
-    "faa": "UPD",
-    "geo": {
-      "alt": 200,
-      "lat": 35.0522,
-      "lon": -119.2437
-    },
-    "icao": "KUPD",
-    "id": 1254,
-    "type": "airport",
-    "tz": "America/Los_Angeles"
-  }'
-```
-
-### Delete an airport
-```bash
-curl -X DELETE https://your-api-gateway-url/airports/airport_1254
-```
-
-### Find routes for an airport
-```bash
-curl -X GET "https://your-api-gateway-url/airports/LAX/routes"
-```
-
-### Find airlines for an airport
-```bash
-curl -X GET "https://your-api-gateway-url/airports/LAX/airlines"
-```
-
-### Find hotels near an airport
-```bash
-curl -X GET "https://your-api-gateway-url/airports/airport_1254/hotels/nearby/10km"
-```
-
-## License
-
-Apache 2.0
