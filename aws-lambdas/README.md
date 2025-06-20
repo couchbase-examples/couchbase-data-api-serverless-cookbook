@@ -63,7 +63,7 @@ The API provides a comprehensive Airport Information System that manages airport
 Before using the hotel search functionality, you need to create a Full Text Search index:
 
 ```bash
-npm run create-fts-index
+node ../scripts/create-fts-index.js
 ```
 
 This creates a geo-spatial FTS index called `hotel-geo-index` that enables proximity searches for hotels near airports. The index will be built in the background and will be ready for use shortly after creation.
