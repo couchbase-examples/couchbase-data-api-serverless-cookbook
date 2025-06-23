@@ -1,8 +1,7 @@
 import functions from '@google-cloud/functions-framework';
-import axios from 'axios';
-import { getDataApiConfig, getQueryUrl } from '../lib/couchbase.js';
+import { getDataApiConfig, getQueryUrl } from './common.js';
 
-functions.http('getAirportRoutes', async (req, res) => {
+functions.http('getAirportAirlines', async (req, res) => {
     try {
         const pathParts = req.path.split('/');
         const airportCode = pathParts[pathParts.length - 2];
@@ -12,11 +11,10 @@ functions.http('getAirportRoutes', async (req, res) => {
         }
 
         const statement = `
-            SELECT r.*
+            SELECT DISTINCT r.airline
             FROM \`travel-sample\`.inventory.route r 
             WHERE r.sourceairport = ? OR r.destinationairport = ?
-            ORDER BY r.sourceairport, r.destinationairport
-            LIMIT 10
+            ORDER BY r.airline
         `;
         
         const args = [airportCode, airportCode];
@@ -34,25 +32,27 @@ functions.http('getAirportRoutes', async (req, res) => {
         console.log(`Query: ${statement}`);
         console.log(`Args: ${JSON.stringify(args)}`);
         
-        const response = await axios.post(url, queryBody, {
+        const response = await fetch(url, {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Basic ${auth}`
-            }
+            },
+            body: JSON.stringify(queryBody)
         });
         
-        res.json(response.data);
-    } catch (error) {
-        console.error('Error executing routes query in GCP cloud function:', error);
-        
-        if (error.response) {
-            const errorBody = error.response.data;
-            console.error(`Query API Error (${error.response.status}): ${JSON.stringify(errorBody)}`);
-            return res.status(error.response.status).json({ 
-                error: `Error executing routes query: ${error.response.statusText}. Detail: ${JSON.stringify(errorBody)}` 
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`Query API Error (${response.status}): ${errorBody}`);
+            return res.status(response.status).json({ 
+                error: `Error executing airlines query: ${response.statusText}. Detail: ${errorBody}` 
             });
         }
         
-        res.status(500).json({ error: 'Error executing routes query' });
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Error executing airlines query in GCP cloud function:', error);
+        res.status(500).json({ error: 'Error executing airlines query' });
     }
 }); 

@@ -1,6 +1,5 @@
 import functions from '@google-cloud/functions-framework';
-import { getDataApiConfig, getDocumentUrl } from '../lib/couchbase.js';
-import axios from 'axios';
+import { getDataApiConfig, getDocumentUrl } from './common.js';
 
 functions.http('getAirport', async (req, res) => {
     try {
@@ -14,19 +13,25 @@ functions.http('getAirport', async (req, res) => {
         const dapi_config = getDataApiConfig()
         const dapi_url = getDocumentUrl(airport_id)
         const auth = Buffer.from(`${dapi_config.username}:${dapi_config.password}`).toString('base64');
-        const dapi_response = await axios.get(dapi_url, {
+        const dapi_response = await fetch(dapi_url, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Basic ${auth}`
             }
-        })
-        res.status(200).send(dapi_response.data);
+        });
+        
+        if (!dapi_response.ok) {
+            if (dapi_response.status === 404) {
+                return res.status(404).send('Airport not found');
+            }
+            throw new Error(`HTTP error! status: ${dapi_response.status}`);
+        }
+        
+        const data = await dapi_response.json();
+        res.status(200).send(data);
     } catch (error) {
         console.error('Error fetching airport data from GCP cloud run:', error);
-        if (error.response && error.response.status === 404) {
-            res.status(404).send('Airport not found');
-        } else {
-            res.status(500).send('Error fetching airport data');
-        }
+        res.status(500).send('Error fetching airport data');
     }
 });

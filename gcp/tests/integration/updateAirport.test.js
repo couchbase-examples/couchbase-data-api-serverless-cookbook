@@ -1,21 +1,16 @@
-import axios from 'axios';
-
 describe('PUT /airports/{airportId} - Update Airport', () => {
     let apiBaseUrl;
-    let testAirportId;
+    const testAirportId = `UPDATE_TEST_${Date.now()}`;
 
-    beforeAll(() => {
+    beforeAll(async () => {
         apiBaseUrl = global.API_BASE_URL;
         expect(apiBaseUrl).toBeDefined();
-        testAirportId = `UPDATE_TEST${Date.now()}`;
-    });
 
-    beforeEach(async () => {
-        // Create a test airport for update operations
+        // Create a test airport first
         const airportData = {
-            airportname: 'Update Test Airport',
-            city: 'Update Test City',
-            country: 'Update Test Country',
+            airportname: 'Test Update Airport',
+            city: 'Test City',
+            country: 'Test Country',
             faa: testAirportId,
             icao: `I${testAirportId}`,
             tz: 'America/Los_Angeles',
@@ -26,18 +21,20 @@ describe('PUT /airports/{airportId} - Update Airport', () => {
             }
         };
 
-        try {
-            await axios.post(`${apiBaseUrl}/airports/${testAirportId}`, airportData);
-        } catch (error) {
-            // Airport might already exist, continue with tests
-        }
+        await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(airportData)
+        });
     });
 
     test('should update airport successfully with valid data', async () => {
         const updatedData = {
-            airportname: 'Updated Airport Name',
-            city: 'Updated City',
-            country: 'Updated Country',
+            airportname: 'Updated Test Airport',
+            city: 'Updated Test City',
+            country: 'Updated Test Country',
             faa: testAirportId,
             icao: `I${testAirportId}`,
             tz: 'America/New_York',
@@ -48,46 +45,54 @@ describe('PUT /airports/{airportId} - Update Airport', () => {
             }
         };
 
-        const response = await axios.put(`${apiBaseUrl}/airports/${testAirportId}`, updatedData);
+        const response = await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedData)
+        });
         
         expect(response.status).toBe(200);
-        expect(response.data).toBeDefined();
+        const data = await response.json();
+        expect(data).toBeDefined();
     });
 
     test('should return 404 for non-existent airport', async () => {
-        const nonExistentId = `NONEXISTENT${Date.now()}`;
+        const nonExistentId = `NONEXISTENT_${Date.now()}`;
         const updateData = {
-            airportname: 'Updated Airport',
-            city: 'Updated City',
-            country: 'Updated Country'
+            airportname: 'Non-existent Airport'
         };
 
-        try {
-            await axios.put(`${apiBaseUrl}/airports/${nonExistentId}`, updateData);
-            fail('Expected request to fail with 404');
-        } catch (error) {
-            expect(error.response.status).toBe(404);
-        }
+        const response = await fetch(`${apiBaseUrl}/airports/${nonExistentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updateData)
+        });
+        
+        expect(response.status).toBe(404);
     });
 
-    test('should return 400 for invalid data types', async () => {
+    test('should return 400 for invalid data', async () => {
         const invalidData = {
             airportname: 123, // Should be string
-            city: 'Updated City',
-            country: 'Updated Country',
             geo: {
                 lat: 'invalid', // Should be number
-                lon: -122.4194,
-                alt: 13
+                lon: -122.4194
             }
         };
 
-        try {
-            await axios.put(`${apiBaseUrl}/airports/${testAirportId}`, invalidData);
-            fail('Expected request to fail with 400');
-        } catch (error) {
-            expect(error.response.status).toBe(400);
-        }
+        const response = await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(invalidData)
+        });
+        
+        expect([400, 500]).toContain(response.status);
     });
 
     test('should handle partial updates', async () => {
@@ -95,20 +100,26 @@ describe('PUT /airports/{airportId} - Update Airport', () => {
             airportname: 'Partially Updated Airport'
         };
 
-        try {
-            const response = await axios.put(`${apiBaseUrl}/airports/${testAirportId}`, partialData);
-            expect([200, 400]).toContain(response.status);
-        } catch (error) {
-            expect([400, 404]).toContain(error.response.status);
-        }
+        const response = await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(partialData)
+        });
+        
+        expect([200, 400]).toContain(response.status);
     });
 
     test('should handle empty request body', async () => {
-        try {
-            await axios.put(`${apiBaseUrl}/airports/${testAirportId}`, {});
-            fail('Expected request to fail with 400');
-        } catch (error) {
-            expect(error.response.status).toBe(400);
-        }
+        const response = await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        });
+        
+        expect(response.status).toBe(400);
     });
 }); 

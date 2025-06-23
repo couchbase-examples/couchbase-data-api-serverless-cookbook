@@ -1,6 +1,5 @@
 import functions from '@google-cloud/functions-framework';
-import axios from 'axios';
-import { getDataApiConfig, getDocumentUrl } from '../lib/couchbase.js';
+import { getDataApiConfig, getDocumentUrl } from './common.js';
 
 functions.http('deleteAirport', async (req, res) => {
     try {
@@ -15,20 +14,24 @@ functions.http('deleteAirport', async (req, res) => {
         const dapi_url = getDocumentUrl(airport_id)
         const auth = Buffer.from(`${dapi_config.username}:${dapi_config.password}`).toString('base64');
         
-        const dapi_response = await axios.delete(dapi_url, {
+        const dapi_response = await fetch(dapi_url, {
+            method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Basic ${auth}`
             }
-        })
+        });
+        
+        if (!dapi_response.ok) {
+            if (dapi_response.status === 404) {
+                return res.status(404).send('Airport not found');
+            }
+            throw new Error(`HTTP error! status: ${dapi_response.status}`);
+        }
         
         res.status(204).send();
     } catch (error) {
         console.error('Error deleting airport data in GCP cloud function:', error);
-        if (error.response && error.response.status === 404) {
-            res.status(404).send('Airport not found');
-        } else {
-            res.status(500).send('Error deleting airport data');
-        }
+        res.status(500).send('Error deleting airport data');
     }
 }); 

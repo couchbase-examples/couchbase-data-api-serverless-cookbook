@@ -61,7 +61,7 @@ function getFunctionPlaceholder(functionName) {
     const placeholderMap = {
         'data-api-getairport': '{{GET_AIRPORT_FUNCTION_URL}}',
         'data-api-createairport': '{{CREATE_AIRPORT_FUNCTION_URL}}',
-        'data-api-updateairport': '{{UPDATE_AIRPORT_FUNCTION_URL}}', 
+        'data-api-updateairport': '{{UPDATE_AIRPORT_FUNCTION_URL}}',
         'data-api-deleteairport': '{{DELETE_AIRPORT_FUNCTION_URL}}',
         'data-api-getairportroutes': '{{GET_AIRPORT_ROUTES_FUNCTION_URL}}',
         'data-api-getairportairlines': '{{GET_AIRPORT_AIRLINES_FUNCTION_URL}}',

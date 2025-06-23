@@ -1,17 +1,12 @@
-import axios from 'axios';
-
 describe('DELETE /airports/{airportId} - Delete Airport', () => {
     let apiBaseUrl;
-    let testAirportId;
+    const testAirportId = `DELETE_TEST_${Date.now()}`;
 
-    beforeAll(() => {
+    beforeAll(async () => {
         apiBaseUrl = global.API_BASE_URL;
         expect(apiBaseUrl).toBeDefined();
-    });
 
-    beforeEach(async () => {
-        // Create a test airport for delete operations
-        testAirportId = `DELETE_TEST${Date.now()}`;
+        // Create a test airport for deletion
         const airportData = {
             airportname: 'Delete Test Airport',
             city: 'Delete Test City',
@@ -26,66 +21,64 @@ describe('DELETE /airports/{airportId} - Delete Airport', () => {
             }
         };
 
-        try {
-            await axios.post(`${apiBaseUrl}/airports/${testAirportId}`, airportData);
-        } catch (error) {
-            // Airport creation might fail, but continue with tests
-        }
+        await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(airportData)
+        });
     });
 
     test('should delete airport successfully', async () => {
-        const response = await axios.delete(`${apiBaseUrl}/airports/${testAirportId}`);
+        const response = await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
+            method: 'DELETE'
+        });
         
-        expect(response.status).toBe(200);
-        expect(response.data).toBeDefined();
+        expect(response.status).toBe(204);
     });
 
     test('should return 404 for non-existent airport', async () => {
-        const nonExistentId = `NONEXISTENT${Date.now()}`;
-
-        try {
-            await axios.delete(`${apiBaseUrl}/airports/${nonExistentId}`);
-            fail('Expected request to fail with 404');
-        } catch (error) {
-            expect(error.response.status).toBe(404);
-        }
+        const nonExistentId = `NONEXISTENT_${Date.now()}`;
+        
+        const response = await fetch(`${apiBaseUrl}/airports/${nonExistentId}`, {
+            method: 'DELETE'
+        });
+        
+        expect(response.status).toBe(404);
     });
 
-    test('should return 400 for invalid airport ID format', async () => {
+    test('should handle invalid airport ID format', async () => {
         const invalidId = '';
-
-        try {
-            await axios.delete(`${apiBaseUrl}/airports/${invalidId}`);
-            fail('Expected request to fail with 400');
-        } catch (error) {
-            expect([400, 404]).toContain(error.response.status);
-        }
+        
+        const response = await fetch(`${apiBaseUrl}/airports/${invalidId}`, {
+            method: 'DELETE'
+        });
+        
+        expect([400, 404]).toContain(response.status);
     });
 
     test('should handle special characters in airport ID', async () => {
         const specialId = 'ABC@123';
-
-        try {
-            await axios.delete(`${apiBaseUrl}/airports/${specialId}`);
-        } catch (error) {
-            expect([400, 404, 500]).toContain(error.response.status);
-        }
+        
+        const response = await fetch(`${apiBaseUrl}/airports/${specialId}`, {
+            method: 'DELETE'
+        });
+        
+        expect([400, 404, 500]).toContain(response.status);
     });
 
-    test('should confirm airport is deleted by trying to get it', async () => {
-        // First delete the airport
-        try {
-            await axios.delete(`${apiBaseUrl}/airports/${testAirportId}`);
-        } catch (error) {
-            // Airport might not exist, continue
-        }
+    test('should handle double deletion', async () => {
+        const response = await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
+            method: 'DELETE'
+        });
+        
+        expect([204, 404]).toContain(response.status);
+    });
 
-        // Then try to get it - should return 404
-        try {
-            await axios.get(`${apiBaseUrl}/airports/${testAirportId}`);
-            fail('Expected request to fail with 404 after deletion');
-        } catch (error) {
-            expect(error.response.status).toBe(404);
-        }
+    test('should verify airport is actually deleted', async () => {
+        const response = await fetch(`${apiBaseUrl}/airports/${testAirportId}`);
+        
+        expect(response.status).toBe(404);
     });
 }); 

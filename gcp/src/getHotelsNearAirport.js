@@ -1,6 +1,5 @@
 import functions from '@google-cloud/functions-framework';
-import axios from 'axios';
-import { getDataApiConfig, getFTSSearchUrl } from '../lib/couchbase.js';
+import { getDataApiConfig, getFTSSearchUrl } from './common.js';
 
 functions.http('getHotelsNearAirport', async (req, res) => {
     try {
@@ -20,16 +19,23 @@ functions.http('getHotelsNearAirport', async (req, res) => {
         // Step 1: Get airport document
         const airportUrl = `https://${dapi_config.endpoint}/v1/buckets/${dapi_config.bucketName}/scopes/${dapi_config.scope}/collections/${dapi_config.collection}/documents/${airportId}`;
         
-        const airportResponse = await axios.get(airportUrl, {
+        const airportResponse = await fetch(airportUrl, {
+            method: 'GET',
             headers: {
                 'Accept': 'application/json',
                 'Authorization': `Basic ${auth}`
             }
         });
 
-        const airportData = airportResponse.data;
-        const { lat: latitude, lon: longitude } = airportData.geo;
+        if (!airportResponse.ok) {
+            if (airportResponse.status === 404) {
+                return res.status(404).json({ error: 'Airport not found' });
+            }
+            throw new Error(`Airport API error! status: ${airportResponse.status}`);
+        }
 
+        const airportData = await airportResponse.json();
+        const { lat: latitude, lon: longitude } = airportData.geo;
 
         // Step 2: Search for nearby hotels using FTS
         const ftsQuery = {
@@ -60,15 +66,25 @@ functions.http('getHotelsNearAirport', async (req, res) => {
 
         const ftsUrl = getFTSSearchUrl('hotel-geo-index');
         
-        const ftsResponse = await axios.post(ftsUrl, ftsQuery, {
+        const ftsResponse = await fetch(ftsUrl, {
+            method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'Authorization': `Basic ${auth}`
-            }
+            },
+            body: JSON.stringify(ftsQuery)
         });
 
-        const ftsData = ftsResponse.data;
+        if (!ftsResponse.ok) {
+            const errorBody = await ftsResponse.text();
+            console.error(`FTS API Error (${ftsResponse.status}): ${errorBody}`);
+            return res.status(ftsResponse.status).json({ 
+                error: `Error: ${ftsResponse.statusText}. Detail: ${errorBody}` 
+            });
+        }
+
+        const ftsData = await ftsResponse.json();
 
         // Format the response
         const hotels = ftsData.hits?.map(hit => ({
@@ -99,22 +115,6 @@ functions.http('getHotelsNearAirport', async (req, res) => {
 
     } catch (error) {
         console.error('Error in getHotelsNearAirport:', error);
-        
-        if (error.response) {
-            const errorBody = error.response.data;
-            console.error(`API Error (${error.response.status}): ${JSON.stringify(errorBody)}`);
-            
-            if (error.response.status === 404) {
-                return res.status(404).json({ 
-                    error: 'Airport not found' 
-                });
-            }
-            
-            return res.status(error.response.status).json({ 
-                error: `Error: ${error.response.statusText}. Detail: ${JSON.stringify(errorBody)}` 
-            });
-        }
-        
         res.status(500).json({ error: 'Internal server error' });
     }
 }); 

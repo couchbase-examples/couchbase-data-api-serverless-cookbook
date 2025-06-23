@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 describe('GET /airports/{airportId} - Get Airport', () => {
     let apiBaseUrl;
 
@@ -10,55 +8,46 @@ describe('GET /airports/{airportId} - Get Airport', () => {
 
     test('should get airport data successfully with valid airport ID', async () => {
         const airportId = 'SFO';
-        const response = await axios.get(`${apiBaseUrl}/airports/${airportId}`);
+        const response = await fetch(`${apiBaseUrl}/airports/${airportId}`);
         
         expect(response.status).toBe(200);
-        expect(response.data).toBeDefined();
-        expect(typeof response.data).toBe('object');
+        const data = await response.json();
+        expect(data).toBeDefined();
+        expect(typeof data).toBe('object');
     });
 
     test('should return 404 for non-existent airport', async () => {
         const airportId = 'NONEXISTENT';
         
-        try {
-            await axios.get(`${apiBaseUrl}/airports/${airportId}`);
-            fail('Expected request to fail with 404');
-        } catch (error) {
-            expect(error.response.status).toBe(404);
-            expect(error.response.data).toContain('Airport not found');
-        }
+        const response = await fetch(`${apiBaseUrl}/airports/${airportId}`);
+        expect(response.status).toBe(404);
+        const data = await response.text();
+        expect(data).toContain('Airport not found');
     });
 
     test('should return 400 for invalid airport ID format', async () => {
         const airportId = '';
         
-        try {
-            await axios.get(`${apiBaseUrl}/airports/${airportId}`);
-            fail('Expected request to fail with 400');
-        } catch (error) {
-            expect([400, 404]).toContain(error.response.status);
-        }
+        const response = await fetch(`${apiBaseUrl}/airports/${airportId}`);
+        expect([400, 404]).toContain(response.status);
     });
 
     test('should handle special characters in airport ID', async () => {
         const airportId = 'ABC@123';
         
-        try {
-            await axios.get(`${apiBaseUrl}/airports/${airportId}`);
-        } catch (error) {
-            expect([400, 404, 500]).toContain(error.response.status);
-        }
+        const response = await fetch(`${apiBaseUrl}/airports/${airportId}`);
+        expect([400, 404, 500]).toContain(response.status);
     });
 
     test('should return proper content-type header', async () => {
         const airportId = 'SFO';
         
-        try {
-            const response = await axios.get(`${apiBaseUrl}/airports/${airportId}`);
-            expect(response.headers['content-type']).toMatch(/application\/json/);
-        } catch (error) {
-            // If airport doesn't exist, still check content-type
-            expect(error.response.headers['content-type']).toMatch(/application\/json|text\/plain/);
+        const response = await fetch(`${apiBaseUrl}/airports/${airportId}`);
+        const contentType = response.headers.get('content-type');
+        if (response.ok) {
+            expect(contentType).toMatch(/application\/json/);
+        } else {
+            expect(contentType).toMatch(/application\/json|text\/plain/);
         }
     });
 }); 

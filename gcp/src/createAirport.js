@@ -1,8 +1,7 @@
 import functions from '@google-cloud/functions-framework';
-import axios from 'axios';
-import { getDataApiConfig, getDocumentUrl } from '../lib/couchbase.js';
+import { getDataApiConfig, getDocumentUrl } from './common.js';
 
-functions.http('updateAirport', async (req, res) => {
+functions.http('createAirport', async (req, res) => {
     try {
         const pathParts = req.path.split('/');
         const airport_id = pathParts[pathParts.length - 1];
@@ -19,20 +18,26 @@ functions.http('updateAirport', async (req, res) => {
         const dapi_url = getDocumentUrl(airport_id)
         const auth = Buffer.from(`${dapi_config.username}:${dapi_config.password}`).toString('base64');
         
-        const dapi_response = await axios.put(dapi_url, req.body, {
+        const dapi_response = await fetch(dapi_url, {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Basic ${auth}`
-            }
-        })
+            },
+            body: JSON.stringify(req.body)
+        });
         
-        res.status(200).send(dapi_response.data);
-    } catch (error) {
-        console.error('Error updating airport data in GCP cloud function:', error);
-        if (error.response && error.response.status === 404) {
-            res.status(404).send('Airport not found');
-        } else {
-            res.status(500).send('Error updating airport data');
+        if (!dapi_response.ok) {
+            if (dapi_response.status === 409) {
+                return res.status(409).send('Airport already exists');
+            }
+            throw new Error(`HTTP error! status: ${dapi_response.status}`);
         }
+        
+        const data = await dapi_response.json();
+        res.status(201).send(data);
+    } catch (error) {
+        console.error('Error creating airport data in GCP cloud function:', error);
+        res.status(500).send('Error creating airport data');
     }
-}); 
+});

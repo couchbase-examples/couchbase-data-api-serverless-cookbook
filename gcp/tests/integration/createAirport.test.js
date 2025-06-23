@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 describe('POST /airports/{airportId} - Create Airport', () => {
     let apiBaseUrl;
 
@@ -24,10 +22,17 @@ describe('POST /airports/{airportId} - Create Airport', () => {
             }
         };
 
-        const response = await axios.post(`${apiBaseUrl}/airports/${airportId}`, airportData);
+        const response = await fetch(`${apiBaseUrl}/airports/${airportId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(airportData)
+        });
         
         expect(response.status).toBe(201);
-        expect(response.data).toBeDefined();
+        const data = await response.json();
+        expect(data).toBeDefined();
     });
 
     test('should return 400 for missing required fields', async () => {
@@ -37,12 +42,15 @@ describe('POST /airports/{airportId} - Create Airport', () => {
             // Missing other required fields
         };
 
-        try {
-            await axios.post(`${apiBaseUrl}/airports/${airportId}`, invalidData);
-            fail('Expected request to fail with 400');
-        } catch (error) {
-            expect(error.response.status).toBe(400);
-        }
+        const response = await fetch(`${apiBaseUrl}/airports/${airportId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(invalidData)
+        });
+        
+        expect(response.status).toBe(400);
     });
 
     test('should return 400 for invalid data types', async () => {
@@ -61,12 +69,15 @@ describe('POST /airports/{airportId} - Create Airport', () => {
             }
         };
 
-        try {
-            await axios.post(`${apiBaseUrl}/airports/${airportId}`, invalidData);
-            fail('Expected request to fail with 400');
-        } catch (error) {
-            expect(error.response.status).toBe(400);
-        }
+        const response = await fetch(`${apiBaseUrl}/airports/${airportId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(invalidData)
+        });
+        
+        expect(response.status).toBe(400);
     });
 
     test('should return 409 for duplicate airport ID', async () => {
@@ -85,22 +96,28 @@ describe('POST /airports/{airportId} - Create Airport', () => {
             }
         };
 
-        try {
-            await axios.post(`${apiBaseUrl}/airports/${airportId}`, airportData);
-            fail('Expected request to fail with 409');
-        } catch (error) {
-            expect([409, 400]).toContain(error.response.status);
-        }
+        const response = await fetch(`${apiBaseUrl}/airports/${airportId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(airportData)
+        });
+        
+        expect([409, 400]).toContain(response.status);
     });
 
     test('should handle empty request body', async () => {
         const airportId = `EMPTY${Date.now()}`;
 
-        try {
-            await axios.post(`${apiBaseUrl}/airports/${airportId}`, {});
-            fail('Expected request to fail with 400');
-        } catch (error) {
-            expect(error.response.status).toBe(400);
-        }
+        const response = await fetch(`${apiBaseUrl}/airports/${airportId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        });
+        
+        expect(response.status).toBe(400);
     });
 }); 

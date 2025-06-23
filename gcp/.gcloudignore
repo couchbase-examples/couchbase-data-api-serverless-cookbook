@@ -67,7 +67,6 @@ jspm_packages/
 # Scripts and deployment files 
 scripts/
 # *.md
-package-lock.json 
 
 # Spec files
 *.yaml
