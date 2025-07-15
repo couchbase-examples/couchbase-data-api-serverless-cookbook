@@ -84,11 +84,13 @@ curl -X POST https://your-api-endpoint/airports/airport_new \
       "lon": -118.2437
     },
     "icao": "KTST",
-    "id": 9999,
+    "id": "airport_9999",
     "type": "airport",
     "tz": "America/Los_Angeles"
   }'
 ```
+
+Note: The `id` field in the request body becomes the document key in Couchbase and the rest of document will be the value.
 
 ### Update an airport
 ```bash
