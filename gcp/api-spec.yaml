@@ -17,6 +17,37 @@ schemes:
   - https
 basePath: /
 paths:
+  /airports:
+    post:
+      summary: Create new airport
+      description: Create a new airport document. The airport ID should be provided in the request body.
+      operationId: createAirport
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AirportInput'
+      responses:
+        '201':
+          description: Created - Airport successfully created
+          schema:
+            $ref: '#/definitions/Airport'
+        '400':
+          description: Bad Request - Invalid input data or missing required id field
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: Conflict - Airport already exists
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      x-google-backend:
+        address: {{CREATE_AIRPORT_FUNCTION_URL}}
+        path_translation: APPEND_PATH_TO_ADDRESS
   /airports/{airportId}:
     get:
       summary: Get airport by ID
@@ -47,41 +78,6 @@ paths:
             $ref: '#/definitions/ErrorResponse'
       x-google-backend:
         address: {{GET_AIRPORT_FUNCTION_URL}}
-        path_translation: APPEND_PATH_TO_ADDRESS
-    post:
-      summary: Create new airport
-      description: Create a new airport document
-      operationId: createAirport
-      parameters:
-        - name: airportId
-          in: path
-          required: true
-          type: string
-          description: The unique identifier for the new airport
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/AirportInput'
-      responses:
-        '201':
-          description: Created - Airport successfully created
-          schema:
-            $ref: '#/definitions/Airport'
-        '400':
-          description: Bad Request - Invalid input data
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '409':
-          description: Conflict - Airport already exists
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      x-google-backend:
-        address: {{CREATE_AIRPORT_FUNCTION_URL}}
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       summary: Update airport
@@ -338,6 +334,7 @@ definitions:
       - faa
       - geo
       - type
+      - id
 
   GeoLocation:
     type: object

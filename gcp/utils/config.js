@@ -41,7 +41,7 @@ export const DB_COLLECTION = process.env.DB_COLLECTION || 'airport';
 // Routes Configuration
 export const ROUTES = [
     { path: '/airports/{airportId}', method: 'GET', function: 'getAirport' },
-    { path: '/airports/{airportId}', method: 'POST', function: 'createAirport' },
+    { path: '/airports', method: 'POST', function: 'createAirport' },
     { path: '/airports/{airportId}', method: 'PUT', function: 'updateAirport' },
     { path: '/airports/{airportId}', method: 'DELETE', function: 'deleteAirport' },
     { path: '/airports/{airportId}/routes', method: 'GET', function: 'getAirportRoutes' },

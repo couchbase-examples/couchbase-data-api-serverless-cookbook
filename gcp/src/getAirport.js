@@ -29,7 +29,14 @@ functions.http('getAirport', async (req, res) => {
         }
         
         const data = await dapi_response.json();
-        res.status(200).send(data);
+        
+        // Appending id field to the response
+        const responseData = {
+            ...data,
+            id: airport_id
+        };
+        
+        res.status(200).send(responseData);
     } catch (error) {
         console.error('Error fetching airport data from GCP cloud run:', error);
         res.status(500).send('Error fetching airport data');

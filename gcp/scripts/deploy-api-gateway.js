@@ -107,7 +107,6 @@ function main() {
         
         console.log('API Gateway setup complete!');
         console.log(`Gateway URL: https://${gatewayUrl}`);
-        console.log('Test your API:');
         
     } catch (error) {
         console.error('Error while deploying API Gateway:', error);

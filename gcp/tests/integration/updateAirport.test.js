@@ -1,6 +1,6 @@
 describe('PUT /airports/{airportId} - Update Airport', () => {
     let apiBaseUrl;
-    const testAirportId = `UPDATE_TEST_${Date.now()}`;
+    const testAirportId = `TEST_UPDATE_AIRPORT`;
 
     beforeAll(async () => {
         apiBaseUrl = global.API_BASE_URL;
@@ -8,6 +8,7 @@ describe('PUT /airports/{airportId} - Update Airport', () => {
 
         // Create a test airport first
         const airportData = {
+            id: testAirportId,
             airportname: 'Test Update Airport',
             city: 'Test City',
             country: 'Test Country',
@@ -21,13 +22,23 @@ describe('PUT /airports/{airportId} - Update Airport', () => {
             }
         };
 
-        await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
+        await fetch(`${apiBaseUrl}/airports`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(airportData)
         });
+    });
+
+    afterAll(async () => {
+        try {
+            await fetch(`${apiBaseUrl}/airports/TEST_AIRPORT`, {
+                method: 'DELETE'
+            });
+        } catch (error) {
+            console.warn(`Failed to cleanup airport:`, error);
+        }
     });
 
     test('should update airport successfully with valid data', async () => {

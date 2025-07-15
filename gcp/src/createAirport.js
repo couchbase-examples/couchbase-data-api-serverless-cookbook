@@ -3,20 +3,21 @@ import { getDataApiConfig, getDocumentUrl } from './lib/common.js';
 
 functions.http('createAirport', async (req, res) => {
     try {
-        const pathParts = req.path.split('/');
-        const airport_id = pathParts[pathParts.length - 1];
-        
-        if (!airport_id || airport_id === 'airports') {
-            return res.status(400).send('airport_id path parameter is required');
-        }
-
         if (!req.body) {
             return res.status(400).send('Request body is required');
+        }
+
+        const airport_id = req.body.id;
+        
+        if (!airport_id) {
+            return res.status(400).send('Missing required attribute: id');
         }
 
         const dapi_config = getDataApiConfig()
         const dapi_url = getDocumentUrl(airport_id)
         const auth = Buffer.from(`${dapi_config.username}:${dapi_config.password}`).toString('base64');
+        
+        const { id, ...parsedBody } = req.body;
         
         const dapi_response = await fetch(dapi_url, {
             method: 'POST',
@@ -24,7 +25,7 @@ functions.http('createAirport', async (req, res) => {
                 'Content-Type': 'application/json',
                 'Authorization': `Basic ${auth}`
             },
-            body: JSON.stringify(req.body)
+            body: JSON.stringify(parsedBody)
         });
         
         if (!dapi_response.ok) {

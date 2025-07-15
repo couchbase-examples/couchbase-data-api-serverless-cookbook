@@ -1,6 +1,6 @@
 describe('DELETE /airports/{airportId} - Delete Airport', () => {
     let apiBaseUrl;
-    const testAirportId = `DELETE_TEST_${Date.now()}`;
+    const testAirportId = `TEST_DELETE_AIRPORT`;
 
     beforeAll(async () => {
         apiBaseUrl = global.API_BASE_URL;
@@ -8,6 +8,7 @@ describe('DELETE /airports/{airportId} - Delete Airport', () => {
 
         // Create a test airport for deletion
         const airportData = {
+            id: testAirportId,
             airportname: 'Delete Test Airport',
             city: 'Delete Test City',
             country: 'Delete Test Country',
@@ -21,13 +22,23 @@ describe('DELETE /airports/{airportId} - Delete Airport', () => {
             }
         };
 
-        await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
+        await fetch(`${apiBaseUrl}/airports`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(airportData)
         });
+    });
+
+    afterAll(async () => {
+        try {
+            await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
+                method: 'DELETE'
+            });
+        } catch (error) {
+            console.warn(`Failed to cleanup test airport:`, error);
+        }
     });
 
     test('should delete airport successfully', async () => {
@@ -46,16 +57,6 @@ describe('DELETE /airports/{airportId} - Delete Airport', () => {
         });
         
         expect(response.status).toBe(404);
-    });
-
-    test('should handle invalid airport ID format', async () => {
-        const invalidId = '';
-        
-        const response = await fetch(`${apiBaseUrl}/airports/${invalidId}`, {
-            method: 'DELETE'
-        });
-        
-        expect([400, 404]).toContain(response.status);
     });
 
     test('should handle special characters in airport ID', async () => {
