@@ -6,45 +6,43 @@ import { getAuthHeaders, getDocumentUrl } from '../utils/couchbase';
 export const updateAirport = async (c: Context<{ Bindings: Env }>) => {
 	try {
 		const documentKey = c.req.param('documentKey');
+		const env = c.env;
 		
 		let airportData: AirportDocument;
 		try {
 			airportData = await c.req.json<AirportDocument>();
 		} catch (e) {
-			return new Response(
-				JSON.stringify({ error: 'Invalid JSON in request body for airport update' }),
-				{ status: 400, headers: { 'Content-Type': 'application/json' } }
+			return c.json(
+				{ error: 'Invalid JSON in request body for airport update' },
+				400
 			);
 		}
 		
-		const url = getDocumentUrl(c.env, documentKey);
+		const url = getDocumentUrl(env, documentKey);
 		
 		console.log(`Making PUT request to: ${url}`);
 		const response = await fetch(url, {
 			method: 'PUT',
-			headers: getAuthHeaders(c.env),
+			headers: getAuthHeaders(env),
 			body: JSON.stringify(airportData),
 		});
 		
 		if (!response.ok) {
 			const errorBody = await response.text();
 			console.error(`PUT API Error (${response.status}): ${errorBody}`);
-			return new Response(
-				JSON.stringify({ error: `Error updating airport document: ${response.statusText}. Detail: ${errorBody}` }),
-				{ status: response.status, headers: { 'Content-Type': 'application/json' } }
+			return c.json(
+				{ error: `Error updating airport document: ${response.statusText}. Detail: ${errorBody}` },
+				response.status as any
 			);
 		}
 		
-		const responseData = await response.json().catch(() => (response.status === 204 ? {} : { message: 'Updated' }));
-		return new Response(
-			JSON.stringify(responseData),
-			{ status: 200, headers: { 'Content-Type': 'application/json' } }
-		);
+		const responseData = await response.json().catch(() => ({})) as any;
+		return c.json(responseData);
 	} catch (error: any) {
 		console.error("Error handling PUT request:", error);
-		return new Response(
-			JSON.stringify({ error: error.message }),
-			{ status: 500, headers: { 'Content-Type': 'application/json' } }
+		return c.json(
+			{ error: error.message },
+			500
 		);
 	}
 }; 

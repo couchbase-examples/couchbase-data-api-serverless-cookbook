@@ -1,24 +1,6 @@
 # Cloudflare Workers API for Couchbase
 
-This project demonstrates how to build a Cloudflare Workers-based API using the **Hono framework** that interfaces with Couchbase's Data API to manage airport data from the travel-sample dataset.
-
-## Overview
-
-The API provides a comprehensive Airport Information System that manages airport data and provides related travel information from the Couchbase travel-sample dataset:
-
-### Airport Management (CRUD Operations)
-- `GET /airports/{document_key}` - Retrieve an airport document
-- `POST /airports/{document_key}` - Create a new airport document
-- `PUT /airports/{document_key}` - Update an existing airport document
-- `DELETE /airports/{document_key}` - Delete an airport document
-
-### Airport Information Queries
-- `POST /airports/routes` - Find routes for a specific airport
-- `POST /airports/airlines` - Find airlines that service a specific airport
-
-### Full Text Search (FTS) Features
-- `POST /fts/index/create` - Create FTS index for hotel geo-spatial search
-- `POST /airports/hotels/nearby` - Find hotels near a specific airport using geo-spatial FTS
+This project demonstrates how to build a Cloudflare Workers-based API using the [**Hono framework**](https://developers.cloudflare.com/workers/frameworks/framework-guides/hono/) that interfaces with Couchbase's Data API to manage airport data from the travel-sample dataset.
 
 **Note:** The FTS features require:
 1. A Full Text Search index with geo-spatial mapping on hotel documents
@@ -27,10 +9,11 @@ The API provides a comprehensive Airport Information System that manages airport
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18 or later)
+- [Node.js](https://nodejs.org/) (v20 or later)
 - [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/)
-- Couchbase Server with Data API enabled
-- Couchbase travel-sample bucket loaded
+- [Cloudflare account](https://dash.cloudflare.com/) with verified email
+- [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with Data API enabled
+- Couchbase [travel-sample](https://docs.couchbase.com/dotnet-sdk/current/ref/travel-app-data-model.html) bucket loaded
 
 ## Setup
 
@@ -43,16 +26,16 @@ cd cloudflare-workers
 ```bash
 npm install
 ```
-4. Configure your environment variables in `wrangler.jsonc` or through Cloudflare dashboard:
-```json
-{
-  "vars": {
-    "DATA_API_USERNAME": "your_username",
-    "DATA_API_PASSWORD": "your_password", 
-    "DATA_API_ENDPOINT": "your_endpoint"
-  }
-}
-```
+4. Configure your database (see [Database Configuration](../README.md#database-configuration) in the main README)
+5. Configure your environment variables (see [Deployment section](#deployment) for details)
+
+
+
+## FTS Index Setup
+
+Before using the hotel search functionality, you need to create a Full Text Search index. Use the Node.js script provided in the root of the repository.
+
+See [../scripts/README.md](../scripts/README.md) for detailed instructions on creating the required `hotel-geo-index` for geo-spatial hotel searches.
 
 ## Development
 
@@ -61,71 +44,73 @@ Start the development server:
 npm run dev
 ```
 
+## Testing
+
+This project includes comprehensive unit tests for all handler functions using [Vitest](https://vitest.dev/) and the [@cloudflare/vitest-pool-workers](https://developers.cloudflare.com/workers/testing/vitest-integration/) testing framework.
+
+### Running Tests
+
+Run all tests:
+```bash
+npm run test
+```
+
+Run specific test categories:
+```bash
+# Run only handler tests
+npm run test:handlers
+
+# Run a specific test file
+npm test test/handlers/getHotelsNearAirport.spec.ts
+```
+
 ## Deployment
 
-Deploy to Cloudflare Workers:
+### Prerequisites
+
+- [Cloudflare account](https://dash.cloudflare.com/) with verified email
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed
+
+### Authentication
+
+```bash
+wrangler login
+```
+
+### Environment Variables
+
+Set your Couchbase Data API credentials using one of these methods:
+
+**Option 1: Cloudflare Dashboard (Recommended)**
+1. Deploy first: `npm run deploy`
+2. Go to [Workers Dashboard](https://dash.cloudflare.com/) → Your Worker → Settings → Environment Variables
+3. Add: `DATA_API_USERNAME`, `DATA_API_PASSWORD`, `DATA_API_ENDPOINT` as secrets
+
+**Option 2: CLI Secrets**
+```bash
+wrangler secret put DATA_API_USERNAME
+wrangler secret put DATA_API_PASSWORD
+wrangler secret put DATA_API_ENDPOINT
+```
+
+**Option 3: wrangler.jsonc (Development only)**
+```json
+{
+  "vars": {
+    "DATA_API_USERNAME": "your_username",
+    "DATA_API_PASSWORD": "your_password",
+    "DATA_API_ENDPOINT": "your_endpoint"
+  }
+}
+```
+
+### Deploy
+
 ```bash
 npm run deploy
 ```
 
-## API Examples
 
-### Get an airport
-```bash
-curl https://your-worker.your-subdomain.workers.dev/airports/airport_1254
-```
-
-### Create an airport
-```bash
-curl -X POST https://your-worker.your-subdomain.workers.dev/airports/airport_new \
-  -H "Content-Type: application/json" \
-  -d '{"airportname": "Test Airport", "city": "Test City", "country": "Test Country", "faa": "TST", "geo": {"alt": 100, "lat": 34.0522, "lon": -118.2437}, "icao": "KTST", "id": 9999, "type": "airport", "tz": "America/Los_Angeles"}'
-```
-
-### Update an airport
-```bash
-curl -X PUT https://your-worker.your-subdomain.workers.dev/airports/airport_1254 \
-  -H "Content-Type: application/json" \
-  -d '{"airportname": "Updated Airport", "city": "Updated City", "country": "Updated Country", "faa": "UPD", "geo": {"alt": 200, "lat": 35.0522, "lon": -119.2437}, "icao": "KUPD", "id": 1254, "type": "airport", "tz": "America/Los_Angeles"}'
-```
-
-### Delete an airport
-```bash
-curl -X DELETE https://your-worker.your-subdomain.workers.dev/airports/airport_1254
-```
-
-### Find routes for an airport
-```bash
-curl -X POST https://your-worker.your-subdomain.workers.dev/airports/routes \
-  -H "Content-Type: application/json" \
-  -d '{"airportCode": "LAX"}'
-```
-
-### Find airlines for an airport
-```bash
-curl -X POST https://your-worker.your-subdomain.workers.dev/airports/airlines \
-  -H "Content-Type: application/json" \
-  -d '{"airportCode": "LAX"}'
-```
-
-### Create FTS index for hotel search
-```bash
-curl -X POST https://your-worker.your-subdomain.workers.dev/fts/index/create \
-  -H "Content-Type: application/json"
-```
-
-**Note:** This endpoint creates a geo-spatial FTS index called `hotel-geo-index` that enables proximity searches on hotel documents. The index must be created before using the hotel search functionality.
-
-### Find hotels near an airport
-```bash
-curl -X POST https://your-worker.your-subdomain.workers.dev/airports/hotels/nearby \
-  -H "Content-Type: application/json" \
-  -d '{"airportCode": "SFO", "distance": "10km"}'
-```
-
-**Parameters:**
-- `airportCode`: FAA or ICAO code for the airport (required)
-- `distance`: Search radius (optional, default: "5km")
 
 ## Project Structure
 
@@ -138,7 +123,6 @@ src/
 │   ├── deleteAirport.ts
 │   ├── getAirportRoutes.ts
 │   ├── getAirportAirlines.ts
-│   ├── createFTSIndex.ts
 │   └── getHotelsNearAirport.ts
 ├── types/             # TypeScript type definitions
 │   ├── airport.ts
@@ -146,8 +130,16 @@ src/
 │   └── env.ts
 ├── utils/             # Utility functions
 └── index.ts           # Main application entry point
+test/
+├── handlers/          # Handler unit tests
+│   ├── createAirport.spec.ts
+│   ├── getAirport.spec.ts
+│   ├── updateAirport.spec.ts
+│   ├── deleteAirport.spec.ts
+│   ├── getAirportRoutes.spec.ts
+│   ├── getAirportAirlines.spec.ts
+│   └── getHotelsNearAirport.spec.ts
+├── utils/             # Test utilities and helpers
+│   └── testHelpers.ts
+└── setup.ts           # Test setup configuration
 ```
-
-## License
-
-Apache 2.0 
