@@ -32,7 +32,29 @@ This project demonstrates how to build a serverless API using **[GCP Cloud Funct
     npm install
     ```
     
-4. Configure your database (see [Database Configuration](../README.md#database-configuration) in the main README)
+4. Configure your environment variables:
+   Copy the example environment file and update with your values:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Update the `.env` file with your actual values:
+   ```env
+   # Google Cloud Function Configuration
+   PROJECT_ID=<gcp-project-id>
+   REGION=europe-west1
+   MEMORY=256Mi
+   TIMEOUT=120s
+   RUNTIME=nodejs22
+
+   # Cluster Credentials
+   DATA_API_ENDPOINT=<capella-data-api-endpoint>
+   DATA_API_USERNAME=<capella-cluster-username>
+   DATA_API_PASSWORD=<capella-cluster-password>
+   DB_BUCKET_NAME=travel-sample
+   DB_SCOPE=inventory
+   DB_COLLECTION=airport
+   ```
 
 5. Authenticate with Google Cloud:
    ```bash
