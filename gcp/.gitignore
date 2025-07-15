@@ -156,3 +156,6 @@ config/production.json
 # Backup files
 *.bak
 *.backup
+
+# Generated yaml file
+api-spec-generated.yaml

@@ -1,5 +1,5 @@
 import functions from '@google-cloud/functions-framework';
-import { getDataApiConfig, getQueryUrl } from './common.js';
+import { getDataApiConfig, getQueryUrl } from './lib/common.js';
 
 functions.http('getAirportAirlines', async (req, res) => {
     try {

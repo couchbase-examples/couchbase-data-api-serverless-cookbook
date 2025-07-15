@@ -1,5 +1,5 @@
 import functions from '@google-cloud/functions-framework';
-import { getDataApiConfig, getFTSSearchUrl } from './common.js';
+import { getDataApiConfig, getFTSSearchUrl, getDocumentUrl } from './lib/common.js';
 
 functions.http('getHotelsNearAirport', async (req, res) => {
     try {
@@ -17,7 +17,7 @@ functions.http('getHotelsNearAirport', async (req, res) => {
         const auth = Buffer.from(`${dapi_config.username}:${dapi_config.password}`).toString('base64');
 
         // Step 1: Get airport document
-        const airportUrl = `https://${dapi_config.endpoint}/v1/buckets/${dapi_config.bucketName}/scopes/${dapi_config.scope}/collections/${dapi_config.collection}/documents/${airportId}`;
+        const airportUrl = getDocumentUrl(airportId);
         
         const airportResponse = await fetch(airportUrl, {
             method: 'GET',

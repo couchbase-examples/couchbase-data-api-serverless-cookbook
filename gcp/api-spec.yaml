@@ -28,7 +28,6 @@ paths:
           required: true
           type: string
           description: The unique identifier for the airport
-          example: airport_1254
       responses:
         '200':
           description: Success - Airport data retrieved
@@ -59,7 +58,6 @@ paths:
           required: true
           type: string
           description: The unique identifier for the new airport
-          example: airport_new
         - name: body
           in: body
           required: true
@@ -95,7 +93,6 @@ paths:
           required: true
           type: string
           description: The unique identifier for the airport to update
-          example: airport_1254
         - name: body
           in: body
           required: true
@@ -131,7 +128,6 @@ paths:
           required: true
           type: string
           description: The unique identifier for the airport to delete
-          example: airport_1254
       responses:
         '204':
           description: No Content - Airport successfully deleted
@@ -162,7 +158,6 @@ paths:
           required: true
           type: string
           description: The airport code (FAA or ICAO)
-          example: LAX
       responses:
         '200':
           description: Success - Routes retrieved
@@ -195,7 +190,6 @@ paths:
           required: true
           type: string
           description: The airport code (FAA or ICAO)
-          example: LAX
       responses:
         '200':
           description: Success - Airlines retrieved
@@ -228,13 +222,11 @@ paths:
           required: true
           type: string
           description: The unique identifier for the airport
-          example: airport_1254
         - name: distance
           in: path
           required: true
           type: string
           description: Search radius (e.g., 10km, 5mi)
-          example: 10km
       responses:
         '200':
           description: Success - Nearby hotels retrieved

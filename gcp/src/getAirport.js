@@ -1,5 +1,5 @@
 import functions from '@google-cloud/functions-framework';
-import { getDataApiConfig, getDocumentUrl } from './common.js';
+import { getDataApiConfig, getDocumentUrl } from './lib/common.js';
 
 functions.http('getAirport', async (req, res) => {
     try {
@@ -7,7 +7,7 @@ functions.http('getAirport', async (req, res) => {
         const airport_id = pathParts[pathParts.length - 1];
         
         if (!airport_id || airport_id === 'airports') {
-            return res.status(400).send('airport_id path parameter is required');
+            return res.status(400).send('airport_id path parameter is required \n');
         }
         
         const dapi_config = getDataApiConfig()
@@ -23,7 +23,7 @@ functions.http('getAirport', async (req, res) => {
         
         if (!dapi_response.ok) {
             if (dapi_response.status === 404) {
-                return res.status(404).send('Airport not found');
+                return res.status(404).send('Airport not found\n');
             }
             throw new Error(`HTTP error! status: ${dapi_response.status}`);
         }

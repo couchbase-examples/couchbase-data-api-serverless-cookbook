@@ -59,13 +59,13 @@ function createApiSpecWithInjectedUrls() {
 
 function getFunctionPlaceholder(functionName) {
     const placeholderMap = {
-        'data-api-getairport': '{{GET_AIRPORT_FUNCTION_URL}}',
-        'data-api-createairport': '{{CREATE_AIRPORT_FUNCTION_URL}}',
-        'data-api-updateairport': '{{UPDATE_AIRPORT_FUNCTION_URL}}',
-        'data-api-deleteairport': '{{DELETE_AIRPORT_FUNCTION_URL}}',
-        'data-api-getairportroutes': '{{GET_AIRPORT_ROUTES_FUNCTION_URL}}',
-        'data-api-getairportairlines': '{{GET_AIRPORT_AIRLINES_FUNCTION_URL}}',
-        'data-api-gethotelsnearairport': '{{GET_HOTELS_NEAR_AIRPORT_FUNCTION_URL}}'
+        'getairport': '{{GET_AIRPORT_FUNCTION_URL}}',
+        'createairport': '{{CREATE_AIRPORT_FUNCTION_URL}}',
+        'updateairport': '{{UPDATE_AIRPORT_FUNCTION_URL}}',
+        'deleteairport': '{{DELETE_AIRPORT_FUNCTION_URL}}',
+        'getairportroutes': '{{GET_AIRPORT_ROUTES_FUNCTION_URL}}',
+        'getairportairlines': '{{GET_AIRPORT_AIRLINES_FUNCTION_URL}}',
+        'gethotelsnearairport': '{{GET_HOTELS_NEAR_AIRPORT_FUNCTION_URL}}'
     };
     
     return placeholderMap[functionName.toLowerCase()];
@@ -98,7 +98,7 @@ function main() {
             createGateway(GATEWAY_NAME, API_NAME, configName);
             console.log('Gateway created:', GATEWAY_NAME);
         } else {
-            updateGateway(GATEWAY_NAME, configName);
+            updateGateway(GATEWAY_NAME, configName, API_NAME);
             console.log('Gateway updated:', GATEWAY_NAME);
         }
         

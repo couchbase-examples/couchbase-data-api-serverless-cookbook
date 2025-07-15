@@ -37,7 +37,7 @@ export function createApiConfig(apiName, apiConfigName, specPath) {
 }
 
 export function createGateway(gatewayName, apiName, configName) {
-    console.log(`Creating gateway: ${gatewayName}`);
+    console.log(`Creating gateway: ${gatewayName}, Might take a few minutes...`);
     
     const cmd = `gcloud api-gateway gateways create ${gatewayName} \
         --api=${apiName} \
@@ -98,10 +98,11 @@ export function checkGatewayExists(gatewayName) {
 		}
 	}
 
-export function updateGateway(gatewayName, configName) {
-    console.log('Updating existing gateway...');
+export function updateGateway(gatewayName, configName, apiId) {
+    console.log('Updating existing gateway... Might take a few minutes...');
     
     const cmd = `gcloud api-gateway gateways update ${gatewayName} \
+        --api=${apiId} \
         --api-config=${configName} \
         --location=${REGION} \
         --project=${PROJECT_ID}`;

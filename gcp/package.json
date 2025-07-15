@@ -14,8 +14,8 @@
   "scripts": {
     "deploy-gcp-cloud-function": "env-cmd -f .env node scripts/deploy-cloud-function.js",
     "deploy-api-gateway": "env-cmd -f .env node scripts/deploy-api-gateway.js",
-    "test": "jest",
-    "test:integration": "jest --testPathPattern=tests/integration"
+    "test": "env-cmd -f .env jest",
+    "test:integration": "env-cmd -f .env jest --testPathPattern=tests/integration"
   },
   "author": "Prajwal Pai",
   "license": "ISC",

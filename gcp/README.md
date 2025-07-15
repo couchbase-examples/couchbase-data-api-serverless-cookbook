@@ -1,6 +1,6 @@
 # GCP Cloud Functions API for Couchbase
 
-This project demonstrates how to build a serverless API using **GCP Cloud Functions and API Gateway** that interfaces with Couchbase's Data API to manage airport data from the travel-sample dataset.
+This project demonstrates how to build a serverless API using **[GCP Cloud Functions and API Gateway](https://cloud.google.com/api-gateway/docs/get-started-cloud-functions)** that interfaces with Couchbase's Data API to manage airport data from the travel-sample dataset.
 
 **Note:** The FTS features require:
 1. A Full Text Search index with geo-spatial mapping on hotel documents
@@ -10,10 +10,10 @@ This project demonstrates how to build a serverless API using **GCP Cloud Functi
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v22.x or later)
-- [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) configured with appropriate credentials
-- Google Cloud Project with Cloud Functions and API Gateway with [services enabled](https://cloud.google.com/api-gateway/docs/secure-traffic-gcloud#enabling_required_services)
-- [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with Data API enabled
-- Couchbase [travel-sample](https://docs.couchbase.com/dotnet-sdk/current/ref/travel-app-data-model.html) bucket loaded
+- [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) configured with appropriate credentials.
+- Google Cloud Project with Cloud Functions and API Gateway with [services enabled.](https://cloud.google.com/api-gateway/docs/secure-traffic-gcloud#enabling_required_services)
+- [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with Data API enabled.
+- Couchbase [travel-sample](https://docs.couchbase.com/dotnet-sdk/current/ref/travel-app-data-model.html) bucket loaded.
 
 ## Setup
 
@@ -32,29 +32,7 @@ This project demonstrates how to build a serverless API using **GCP Cloud Functi
     npm install
     ```
     
-4. Configure your environment variables:
-   Copy the example environment file and update with your values:
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Update the `.env` file with your actual values:
-   ```env
-   # Google Cloud Function Configuration
-   PROJECT_ID=<gcp-project-id>
-   REGION=europe-west1
-   MEMORY=128Mi
-   TIMEOUT=120s
-   RUNTIME=nodejs22
-
-   # Cluster Credentials
-   DATA_API_ENDPOINT=<capella-data-api-endpoint>
-   DB_USERNAME=<capella-cluster-username>
-   DB_PASSWORD=<capella-cluster-password>
-   DB_BUCKET_NAME=travel-sample
-   DB_SCOPE=inventory
-   DB_COLLECTION=airport
-   ```
+4. Configure your database (see [Database Configuration](../README.md#database-configuration) in the main README)
 
 5. Authenticate with Google Cloud:
    ```bash
@@ -87,6 +65,8 @@ After functions are deployed, run the API Gateway deployment:
 ```bash
 npm run deploy-api-gateway
 ```
+
+Note: The API gateway deployment usually takes a few minutes to complete.
 
 This script will:
 1. Create a new API Gateway

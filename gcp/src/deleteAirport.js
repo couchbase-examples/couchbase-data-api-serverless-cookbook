@@ -1,5 +1,5 @@
 import functions from '@google-cloud/functions-framework';
-import { getDataApiConfig, getDocumentUrl } from './common.js';
+import { getDataApiConfig, getDocumentUrl } from './lib/common.js';
 
 functions.http('deleteAirport', async (req, res) => {
     try {

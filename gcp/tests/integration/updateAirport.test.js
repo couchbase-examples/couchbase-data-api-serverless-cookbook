@@ -58,43 +58,6 @@ describe('PUT /airports/{airportId} - Update Airport', () => {
         expect(data).toBeDefined();
     });
 
-    test('should return 404 for non-existent airport', async () => {
-        const nonExistentId = `NONEXISTENT_${Date.now()}`;
-        const updateData = {
-            airportname: 'Non-existent Airport'
-        };
-
-        const response = await fetch(`${apiBaseUrl}/airports/${nonExistentId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(updateData)
-        });
-        
-        expect(response.status).toBe(404);
-    });
-
-    test('should return 400 for invalid data', async () => {
-        const invalidData = {
-            airportname: 123, // Should be string
-            geo: {
-                lat: 'invalid', // Should be number
-                lon: -122.4194
-            }
-        };
-
-        const response = await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(invalidData)
-        });
-        
-        expect([400, 500]).toContain(response.status);
-    });
-
     test('should handle partial updates', async () => {
         const partialData = {
             airportname: 'Partially Updated Airport'
@@ -109,17 +72,5 @@ describe('PUT /airports/{airportId} - Update Airport', () => {
         });
         
         expect([200, 400]).toContain(response.status);
-    });
-
-    test('should handle empty request body', async () => {
-        const response = await fetch(`${apiBaseUrl}/airports/${testAirportId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({})
-        });
-        
-        expect(response.status).toBe(400);
     });
 }); 

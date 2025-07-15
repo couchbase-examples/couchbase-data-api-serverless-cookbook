@@ -1,5 +1,5 @@
 import functions from '@google-cloud/functions-framework';
-import { getDataApiConfig, getDocumentUrl } from './common.js';
+import { getDataApiConfig, getDocumentUrl } from './lib/common.js';
 
 functions.http('createAirport', async (req, res) => {
     try {
@@ -34,7 +34,9 @@ functions.http('createAirport', async (req, res) => {
             throw new Error(`HTTP error! status: ${dapi_response.status}`);
         }
         
-        const data = await dapi_response.json();
+        const data = await dapi_response.json().catch(() => (
+            dapi_response.status === 201 ? {} : { message: 'Created successfully' }
+        ));
         res.status(201).send(data);
     } catch (error) {
         console.error('Error creating airport data in GCP cloud function:', error);

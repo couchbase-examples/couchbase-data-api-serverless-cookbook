@@ -2,18 +2,9 @@ function validateEnvironment() {
     const requiredEnvVars = [
         'PROJECT_ID',
         'DATA_API_ENDPOINT', 
-        'DB_PASSWORD', 
-        'DB_USERNAME', 
+        'DATA_API_PASSWORD', 
+        'DATA_API_USERNAME', 
         'DB_BUCKET_NAME'
-    ];
-    
-    const optionalEnvVars = [
-        'REGION',
-        'MEMORY',
-        'TIMEOUT', 
-        'RUNTIME',
-        'DB_SCOPE',
-        'DB_COLLECTION'
     ];
     
     const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
@@ -35,14 +26,14 @@ export const API_CONFIG_NAME = `${API_NAME}-config`;
 export const GATEWAY_NAME = `${API_NAME}-gateway`;
 
 // Cloud Function Configuration
-export const MEMORY = process.env.MEMORY || '128Mi';
+export const MEMORY = process.env.MEMORY || '256Mi';
 export const TIMEOUT = process.env.TIMEOUT || '60s';
 export const RUNTIME = process.env.RUNTIME || 'nodejs22';
 
 // Database Configuration
 export const DATA_API_ENDPOINT = process.env.DATA_API_ENDPOINT;
-export const DB_USERNAME = process.env.DB_USERNAME;
-export const DB_PASSWORD = process.env.DB_PASSWORD;
+export const DATA_API_USERNAME = process.env.DATA_API_USERNAME;
+export const DATA_API_PASSWORD = process.env.DATA_API_PASSWORD;
 export const DB_BUCKET_NAME = process.env.DB_BUCKET_NAME;
 export const DB_SCOPE = process.env.DB_SCOPE || 'inventory';
 export const DB_COLLECTION = process.env.DB_COLLECTION || 'airport';
@@ -71,8 +62,8 @@ export const FUNCTIONS = [
 
 export const CLOUD_FUNCTION_ENV = {
     DATA_API_ENDPOINT,
-    DB_PASSWORD,
-    DB_USERNAME,
+    DATA_API_PASSWORD,
+    DATA_API_USERNAME,
     DB_BUCKET_NAME,
     DB_SCOPE,
     DB_COLLECTION

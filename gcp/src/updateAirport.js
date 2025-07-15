@@ -1,5 +1,5 @@
 import functions from '@google-cloud/functions-framework';
-import { getDataApiConfig, getDocumentUrl } from './common.js';
+import { getDataApiConfig, getDocumentUrl } from './lib/common.js';
 
 functions.http('updateAirport', async (req, res) => {
     try {
@@ -34,7 +34,9 @@ functions.http('updateAirport', async (req, res) => {
             throw new Error(`HTTP error! status: ${dapi_response.status}`);
         }
         
-        const data = await dapi_response.json();
+        const data = await dapi_response.json().catch(() => (
+            dapi_response.status === 204 ? {} : { message: 'Updated successfully' }
+        ));
         res.status(200).send(data);
     } catch (error) {
         console.error('Error updating airport data in GCP cloud function:', error);
