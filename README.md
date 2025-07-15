@@ -18,7 +18,7 @@ This provides a comprehensive Airport Information System that manages airport da
 
 #### Airport Management (CRUD Operations)
 - `GET /airports/{document_key}` - Retrieve an airport document
-- `POST /airports/{document_key}` - Create a new airport document
+- `POST /airports` - Create a new airport document
 - `PUT /airports/{document_key}` - Update an existing airport document
 - `DELETE /airports/{document_key}` - Delete an airport document
 
@@ -71,7 +71,7 @@ curl https://your-api-endpoint/airports/airport_1254
 
 ### Create an airport
 ```bash
-curl -X POST https://your-api-endpoint/airports/airport_new \
+curl -X POST https://your-api-endpoint/airports \
   -H "Content-Type: application/json" \
   -d '{
     "airportname": "Test Airport",
