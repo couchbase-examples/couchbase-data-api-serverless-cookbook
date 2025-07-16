@@ -1,0 +1,32 @@
+{
+  "name": "couchbase-airport-serverless",
+  "version": "1.0.0",
+  "description": "Serverless Framework implementation of Couchbase Airport API",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:prod": "serverless deploy --stage prod",
+    "offline": "serverless offline",
+    "remove": "serverless remove",
+    "test": "node tests/integration/api-test.js",
+    "test:integration": "node tests/integration/api-test.js"
+  },
+  "keywords": [
+    "serverless",
+    "couchbase",
+    "aws-lambda",
+    "api-gateway"
+  ],
+  "author": "Your Name",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "serverless": "^3.38.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.0",
+    "serverless-dotenv-plugin": "^6.0.0",
+    "serverless-offline": "^13.3.0"
+  }
+}

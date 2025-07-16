@@ -1,0 +1,76 @@
+service: couchbase-airport-api
+
+frameworkVersion: '3'
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  environment:
+    DATA_API_ENDPOINT: ${env:DATA_API_ENDPOINT}
+    DATA_API_USERNAME: ${env:DATA_API_USERNAME}
+    DATA_API_PASSWORD: ${env:DATA_API_PASSWORD}
+  httpApi:
+    cors: true
+
+functions:
+  # CRUD Operations
+  getAirport:
+    handler: src/getAirport.handler
+    events:
+      - httpApi:
+          path: /airports/{airportId}
+          method: get
+
+  createAirport:
+    handler: src/createAirport.handler
+    events:
+      - httpApi:
+          path: /airports/{airportId}
+          method: post
+
+  updateAirport:
+    handler: src/updateAirport.handler
+    events:
+      - httpApi:
+          path: /airports/{airportId}
+          method: put
+
+  deleteAirport:
+    handler: src/deleteAirport.handler
+    events:
+      - httpApi:
+          path: /airports/{airportId}
+          method: delete
+
+  # Query Operations
+  getAirportRoutes:
+    handler: src/getAirportRoutes.handler
+    events:
+      - httpApi:
+          path: /airports/{airportCode}/routes
+          method: get
+
+  getAirportAirlines:
+    handler: src/getAirportAirlines.handler
+    events:
+      - httpApi:
+          path: /airports/{airportCode}/airlines
+          method: get
+
+  # FTS Operations
+  getHotelsNearAirport:
+    handler: src/getHotelsNearAirport.handler
+    events:
+      - httpApi:
+          path: /airports/{airportId}/hotels/nearby/{distance}
+          method: get
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3000 
