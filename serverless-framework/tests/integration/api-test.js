@@ -5,14 +5,14 @@
 async function getDeployedApiUrl() {
   console.log('Getting deployed API URL...');
   
-  if (process.env.API_GATEWAY_URL) {
-    console.log(`Found API URL: ${process.env.API_GATEWAY_URL}`);
-    return process.env.API_GATEWAY_URL;
+  if (process.env.API_BASE_URL) {
+    console.log(`Found API URL: ${process.env.API_BASE_URL}`);
+    return process.env.API_BASE_URL;
   }
   
-  console.error('API_GATEWAY_URL environment variable is not set');
-  console.log('Please set the API_GATEWAY_URL environment variable with your deployed API URL');
-  console.log('Example: export API_GATEWAY_URL="https://your-api-id.execute-api.us-east-1.amazonaws.com"');
+  console.error('API_BASE_URL environment variable is not set');
+  console.log('Please set the API_BASE_URL environment variable with your deployed API URL');
+  console.log('Example: export API_BASE_URL="https://your-api-id.execute-api.us-east-1.amazonaws.com"');
   process.exit(1);
 }
 
@@ -167,8 +167,9 @@ async function testAPI() {
     failed++;
   }
 
-  // Test 6: Get hotels near airport (FTS test) - try different airport IDs
-  const airportIdsToTry = ['airport_1255', 'airport_1256', 'airport_1355'];
+  // Test 6: Get hotels near airport (FTS test) - try different airport IDs  
+  // Using airport IDs that are more likely to exist in travel-sample with geo data
+  const airportIdsToTry = ['airport_1257', 'airport_1258', 'airport_1259'];
   let ftsTestPassed = false;
   
   for (const airportId of airportIdsToTry) {
@@ -178,18 +179,28 @@ async function testAPI() {
       
       if (response.status === 200) {
         const data = await response.json();
-        if (data.success && data.data) {
-          const hotelData = JSON.parse(data.data);
-          console.log(`PASS: Got ${hotelData.hits.length} hotels near ${airportId}`);
+        if (data.hotels !== undefined) {
+          console.log(`PASS: Got ${data.hotels.length} hotels near ${airportId} (total found: ${data.total_hotels_found})`);
           passed++;
           ftsTestPassed = true;
           break;
+        } else if (data.success && data.data) {
+          const hotelData = JSON.parse(data.data);
+          if (hotelData.hits) {
+            console.log(`PASS: Got ${hotelData.hits.length} hotels near ${airportId}`);
+            passed++;
+            ftsTestPassed = true;
+            break;
+          }
         } else if (data.hits) {
           console.log(`PASS: Got ${data.hits.length} hotels near ${airportId} (direct format)`);
           passed++;
           ftsTestPassed = true;
           break;
         }
+      } else {
+        const errorText = await response.text();
+        console.log(`FTS test failed for ${airportId}: HTTP ${response.status} - ${errorText}`);
       }
     } catch (error) {
       console.log(`FTS test failed for ${airportId}: ${error.message}`);
@@ -198,6 +209,11 @@ async function testAPI() {
   
   if (!ftsTestPassed) {
     console.log(`FAIL: FTS test failed for all airport IDs tried`);
+    console.log(`      Possible causes:`);
+    console.log(`      1. FTS index 'hotel-geo-index' not created (see scripts/README.md)`);
+    console.log(`      2. Airport documents missing geo coordinates (geo.lat, geo.lon)`);
+    console.log(`      3. No hotel documents in travel-sample dataset`);
+    console.log(`      4. Airport IDs don't exist in travel-sample`);
     failed++;
   }
 
