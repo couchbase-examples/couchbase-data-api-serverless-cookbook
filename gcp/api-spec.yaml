@@ -1,0 +1,489 @@
+swagger: '2.0'
+info:
+  title: Couchbase Data API - GCP Cloud Functions
+  description: Serverless API for airport data management using Couchbase Data API and GCP Cloud Functions
+  version: 1.0.0
+  contact:
+    name: Couchbase Developer Advocates
+    url: https://github.com/couchbase-examples/couchbase-data-api-serverless-cookbook
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+produces:
+  - application/json
+consumes:
+  - application/json
+schemes:
+  - https
+basePath: /
+paths:
+  /airports:
+    post:
+      summary: Create new airport
+      description: Create a new airport document. The airport ID should be provided in the request body.
+      operationId: createAirport
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AirportInput'
+      responses:
+        '201':
+          description: Created - Airport successfully created
+          schema:
+            $ref: '#/definitions/Airport'
+        '400':
+          description: Bad Request - Invalid input data or missing required id field
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: Conflict - Airport already exists
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      x-google-backend:
+        address: {{CREATE_AIRPORT_FUNCTION_URL}}
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /airports/{airportId}:
+    get:
+      summary: Get airport by ID
+      description: Retrieve an airport document by its ID
+      operationId: getAirport
+      parameters:
+        - name: airportId
+          in: path
+          required: true
+          type: string
+          description: The unique identifier for the airport
+      responses:
+        '200':
+          description: Success - Airport data retrieved
+          schema:
+            $ref: '#/definitions/Airport'
+        '400':
+          description: Bad Request - Invalid airport ID
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found - Airport does not exist
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      x-google-backend:
+        address: {{GET_AIRPORT_FUNCTION_URL}}
+        path_translation: APPEND_PATH_TO_ADDRESS
+    put:
+      summary: Update airport
+      description: Update an existing airport document
+      operationId: updateAirport
+      parameters:
+        - name: airportId
+          in: path
+          required: true
+          type: string
+          description: The unique identifier for the airport to update
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AirportInput'
+      responses:
+        '200':
+          description: Success - Airport updated
+          schema:
+            $ref: '#/definitions/Airport'
+        '400':
+          description: Bad Request - Invalid input data
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found - Airport does not exist
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      x-google-backend:
+        address: {{UPDATE_AIRPORT_FUNCTION_URL}}
+        path_translation: APPEND_PATH_TO_ADDRESS
+    delete:
+      summary: Delete airport
+      description: Delete an airport document
+      operationId: deleteAirport
+      parameters:
+        - name: airportId
+          in: path
+          required: true
+          type: string
+          description: The unique identifier for the airport to delete
+      responses:
+        '204':
+          description: No Content - Airport successfully deleted
+        '400':
+          description: Bad Request - Invalid airport ID
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found - Airport does not exist
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      x-google-backend:
+        address: {{DELETE_AIRPORT_FUNCTION_URL}}
+        path_translation: APPEND_PATH_TO_ADDRESS
+
+  /airports/{airportCode}/routes:
+    get:
+      summary: Get airport routes
+      description: Find all routes for a specific airport (both incoming and outgoing)
+      operationId: getAirportRoutes
+      parameters:
+        - name: airportCode
+          in: path
+          required: true
+          type: string
+          description: The airport code (FAA or ICAO)
+      responses:
+        '200':
+          description: Success - Routes retrieved
+          schema:
+            $ref: '#/definitions/RoutesResponse'
+        '400':
+          description: Bad Request - Invalid airport code
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found - No routes found for airport
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      x-google-backend:
+        address: {{GET_AIRPORT_ROUTES_FUNCTION_URL}}
+        path_translation: APPEND_PATH_TO_ADDRESS
+
+  /airports/{airportCode}/airlines:
+    get:
+      summary: Get airport airlines
+      description: Find all airlines that service a specific airport
+      operationId: getAirportAirlines
+      parameters:
+        - name: airportCode
+          in: path
+          required: true
+          type: string
+          description: The airport code (FAA or ICAO)
+      responses:
+        '200':
+          description: Success - Airlines retrieved
+          schema:
+            $ref: '#/definitions/AirlinesResponse'
+        '400':
+          description: Bad Request - Invalid airport code
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found - No airlines found for airport
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      x-google-backend:
+        address: {{GET_AIRPORT_AIRLINES_FUNCTION_URL}}
+        path_translation: APPEND_PATH_TO_ADDRESS
+
+  /airports/{airportId}/hotels/nearby/{distance}:
+    get:
+      summary: Get nearby hotels
+      description: Find hotels near a specific airport using geo-spatial search
+      operationId: getHotelsNearAirport
+      parameters:
+        - name: airportId
+          in: path
+          required: true
+          type: string
+          description: The unique identifier for the airport
+        - name: distance
+          in: path
+          required: true
+          type: string
+          description: Search radius (e.g., 10km, 5mi)
+      responses:
+        '200':
+          description: Success - Nearby hotels retrieved
+          schema:
+            $ref: '#/definitions/HotelsResponse'
+        '400':
+          description: Bad Request - Invalid parameters
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found - Airport not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      x-google-backend:
+        address: {{GET_HOTELS_NEAR_AIRPORT_FUNCTION_URL}}
+        path_translation: APPEND_PATH_TO_ADDRESS
+
+definitions:
+  Airport:
+    type: object
+    properties:
+      airportname:
+        type: string
+        description: Name of the airport
+        example: San Francisco International Airport
+      city:
+        type: string
+        description: City where the airport is located
+        example: San Francisco
+      country:
+        type: string
+        description: Country where the airport is located
+        example: United States
+      faa:
+        type: string
+        description: FAA airport code
+        example: SFO
+      icao:
+        type: string
+        description: ICAO airport code
+        example: KSFO
+      id:
+        type: integer
+        description: Numeric airport identifier
+        example: 3469
+      type:
+        type: string
+        description: Document type
+        example: airport
+      tz:
+        type: string
+        description: Timezone
+        example: America/Los_Angeles
+      geo:
+        $ref: '#/definitions/GeoLocation'
+    required:
+      - airportname
+      - city
+      - country
+      - faa
+      - geo
+      - type
+
+  AirportInput:
+    type: object
+    properties:
+      airportname:
+        type: string
+        description: Name of the airport
+        example: Test Airport
+      city:
+        type: string
+        description: City where the airport is located
+        example: Test City
+      country:
+        type: string
+        description: Country where the airport is located
+        example: Test Country
+      faa:
+        type: string
+        description: FAA airport code
+        example: TST
+      icao:
+        type: string
+        description: ICAO airport code
+        example: KTST
+      id:
+        type: integer
+        description: Numeric airport identifier
+        example: 9999
+      type:
+        type: string
+        description: Document type
+        example: airport
+      tz:
+        type: string
+        description: Timezone
+        example: America/Los_Angeles
+      geo:
+        $ref: '#/definitions/GeoLocation'
+    required:
+      - airportname
+      - city
+      - country
+      - faa
+      - geo
+      - type
+      - id
+
+  GeoLocation:
+    type: object
+    properties:
+      alt:
+        type: number
+        description: Altitude in feet
+        example: 13
+      lat:
+        type: number
+        description: Latitude
+        example: 37.621311
+      lon:
+        type: number
+        description: Longitude
+        example: -122.378968
+    required:
+      - lat
+      - lon
+
+  Route:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Route identifier
+      type:
+        type: string
+        description: Document type
+        example: route
+      airline:
+        type: string
+        description: Airline operating the route
+        example: UA
+      sourceairport:
+        type: string
+        description: Source airport code
+        example: SFO
+      destinationairport:
+        type: string
+        description: Destination airport code
+        example: LAX
+      equipment:
+        type: string
+        description: Aircraft equipment
+        example: 738
+
+  Hotel:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Hotel identifier
+      name:
+        type: string
+        description: Hotel name
+        example: Marriott San Francisco
+      type:
+        type: string
+        description: Document type
+        example: hotel
+      city:
+        type: string
+        description: City where hotel is located
+        example: San Francisco
+      country:
+        type: string
+        description: Country where hotel is located
+        example: United States
+      geo:
+        $ref: '#/definitions/GeoLocation'
+      score:
+        type: number
+        description: Search relevance score
+
+  RoutesResponse:
+    type: object
+    properties:
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/Route'
+      metrics:
+        type: object
+        description: Query execution metrics
+
+  AirlinesResponse:
+    type: object
+    properties:
+      results:
+        type: array
+        items:
+          type: object
+          properties:
+            airline:
+              type: string
+              description: Airline code
+              example: UA
+      metrics:
+        type: object
+        description: Query execution metrics
+
+  HotelsResponse:
+    type: object
+    properties:
+      airport:
+        type: object
+        properties:
+          id:
+            type: string
+            description: Airport ID
+          code:
+            type: string
+            description: Airport code
+          name:
+            type: string
+            description: Airport name
+          city:
+            type: string
+            description: Airport city
+          country:
+            type: string
+            description: Airport country
+          coordinates:
+            type: object
+            properties:
+              latitude:
+                type: number
+              longitude:
+                type: number
+      search_criteria:
+        type: object
+        properties:
+          distance:
+            type: string
+            description: Search distance
+            example: 10km
+      total_hotels_found:
+        type: integer
+        description: Total number of hotels found
+      hotels:
+        type: array
+        items:
+          $ref: '#/definitions/Hotel'
+
+  ErrorResponse:
+    type: object
+    properties:
+      error:
+        type: string
+        description: Error message
+        example: Airport not found
