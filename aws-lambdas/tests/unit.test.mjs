@@ -39,11 +39,46 @@ if (missingEnvVars.length > 0) {
     process.exit(1);
 }
 
+async function preTest() {
+    // First, check if the test airport already exists and delete it if needed
+    console.log('Checking if test airport already exists...');
+    const checkResult = await getAirportHandler({
+        pathParameters: {
+            airportId: TEST_AIRPORT.id
+        }
+    });
+    
+    if (checkResult.statusCode === 200) {
+        console.log('Test airport already exists. Deleting it first...');
+        const deleteExistingResult = await deleteAirportHandler({
+            pathParameters: {
+                airportId: TEST_AIRPORT.id
+            },
+            headers: {
+                'If-Match': checkResult.headers['etag']
+            }
+        });
+        
+        if (deleteExistingResult.statusCode === 200) {
+            console.log('Successfully deleted existing test airport.');
+        } else {
+            console.error('Failed to delete existing test airport:', deleteExistingResult);
+            throw new Error('Failed to delete existing test airport');
+        }
+    } else if (checkResult.statusCode !== 404) {
+        console.error('Unexpected status when checking for test airport:', checkResult);
+    } else {
+        console.log('Test airport does not exist. Proceeding with creation.');
+    }
+}
+
 async function runTests() {
     console.log('Starting local tests...\n');
     let etag = null;
 
     try {
+        await preTest();
+
         // Test Create Airport
         console.log('Testing Create Airport operation...');
         const createResult = await createAirportHandler({

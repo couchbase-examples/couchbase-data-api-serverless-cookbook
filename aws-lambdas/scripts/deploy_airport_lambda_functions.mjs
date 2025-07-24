@@ -18,7 +18,7 @@ const FUNCTIONS = [
     { name: 'getAirport', method: 'GET', path: '/airports/{airportId}' },
     { name: 'updateAirport', method: 'PUT', path: '/airports/{airportId}' },
     { name: 'deleteAirport', method: 'DELETE', path: '/airports/{airportId}' },
-    { name: 'getAirportRoutes', method: 'POST', path: '/airports/routes' },
+    { name: 'getAirportRoutes', method: 'GET', path: '/airports/routes' },
     { name: 'getAirportAirlines', method: 'POST', path: '/airports/airlines' },
     { name: 'getHotelsNearAirport', method: 'POST', path: '/airports/hotels/nearby' }
 ];
