@@ -9,7 +9,7 @@ import { handler as getHotelsNearAirportHandler } from '../src/getHotelsNearAirp
 
 // Test configuration
 const TEST_CONFIG = {
-    BASE_URL: process.env.BASE_URL,
+    DATA_API_URL: process.env.DATA_API_URL,
     CLUSTER_PASSWORD: process.env.CLUSTER_PASSWORD,
     USERNAME: process.env.USERNAME
 };
@@ -32,7 +32,7 @@ const TEST_AIRPORT = {
 };
 
 // Validate environment variables
-const requiredEnvVars = ['BASE_URL', 'CLUSTER_PASSWORD', 'USERNAME'];
+const requiredEnvVars = ['DATA_API_URL', 'CLUSTER_PASSWORD', 'USERNAME'];
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 if (missingEnvVars.length > 0) {
     console.error('Missing required environment variables:', missingEnvVars.join(', '));
@@ -125,7 +125,7 @@ async function runTests() {
         console.log('Testing Get Hotels Near Airport operation...');
         const hotelsResult = await getHotelsNearAirportHandler({
             pathParameters: {
-                airportId: 'airport_1254',
+                airportId: TEST_AIRPORT.id,
                 distance: '10km'
             }
         });

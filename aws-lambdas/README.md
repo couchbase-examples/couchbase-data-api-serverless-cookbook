@@ -43,7 +43,7 @@ Note: The FTS features require:
    TIMEOUT=3
 
    # Cluster Credentials
-   BASE_URL=<capella-data-api-endpoint>
+   DATA_API_URL=<capella-data-api-endpoint>
    CLUSTER_PASSWORD=<capella-cluster-password>
    USERNAME=<capella-cluster-username>
    ```
@@ -60,7 +60,7 @@ See [../scripts/README.md](../scripts/README.md) for detailed instructions on cr
 
 Run the local test suite:
 ```bash
-npm run test-airport-api-local
+npm run test-unit
 ```
 
 ### API Gateway Integration Testing

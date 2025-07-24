@@ -21,11 +21,11 @@ const formatError = function(error) {
 export const handler = async (event) => {
     try {
         // Configuration validation
-        if (!process.env.BASE_URL) {
+        if (!process.env.DATA_API_URL) {
             return formatError({
                 statusCode: 500,
                 code: "ConfigurationError",
-                message: "BASE_URL environment variable is not set"
+                message: "DATA_API_URL environment variable is not set"
             });
         }
         if (!process.env.CLUSTER_PASSWORD) {
@@ -55,7 +55,7 @@ export const handler = async (event) => {
             });
         }
 
-        const baseUrl = process.env.BASE_URL;
+        const baseUrl = process.env.DATA_API_URL;
         const username = process.env.USERNAME;
         const password = process.env.CLUSTER_PASSWORD;
 
