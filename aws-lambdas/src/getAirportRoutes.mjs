@@ -18,7 +18,6 @@ const formatError = function(error) {
 };
 
 export const handler = async (event) => {
-    console.log("Received event:", JSON.stringify(event, null, 2)); // Add this line
     try {
         // Configuration validation
         if (!process.env.DATA_API_URL) {
