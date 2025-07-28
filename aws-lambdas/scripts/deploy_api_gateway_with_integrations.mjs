@@ -8,7 +8,7 @@ const ACCOUNT_ID = process.env.ACCOUNT_ID;
 // Route configurations matching the Lambda functions
 const ROUTES = [
     { path: '/airports/{airportId}', method: 'GET', function: 'data-api-getAirport' },
-    { path: '/airports/{airportId}', method: 'POST', function: 'data-api-createAirport' },
+    { path: '/airports', method: 'POST', function: 'data-api-createAirport' },
     { path: '/airports/{airportId}', method: 'PUT', function: 'data-api-updateAirport' },
     { path: '/airports/{airportId}', method: 'DELETE', function: 'data-api-deleteAirport' },
     { path: '/airports/{airportCode}/routes', method: 'GET', function: 'data-api-getAirportRoutes' },

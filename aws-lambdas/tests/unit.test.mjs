@@ -59,7 +59,7 @@ async function preTest() {
             }
         });
         
-        if (deleteExistingResult.statusCode === 200) {
+        if (deleteExistingResult.statusCode === 204) {
             console.log('Successfully deleted existing test airport.');
         } else {
             console.error('Failed to delete existing test airport:', deleteExistingResult);
@@ -82,14 +82,14 @@ async function runTests() {
         // Test Create Airport
         console.log('Testing Create Airport operation...');
         const createResult = await createAirportHandler({
-            pathParameters: {
-                airportId: TEST_AIRPORT.id
-            },
             body: JSON.stringify(TEST_AIRPORT)
         });
-        assert.strictEqual(createResult.statusCode, 200, 'Create should return 200');
+        assert.strictEqual(createResult.statusCode, 201, 'Create should return 201');
         assert.ok(createResult.headers['etag'], 'Create should return an ETag');
         assert.ok(createResult.headers['x-cb-mutationtoken'], 'Create should return a mutation token');
+        const createData = JSON.parse(createResult.body);
+        assert.strictEqual(createData.type, TEST_AIRPORT.type, 'Created document should be of type airport');
+        assert.strictEqual(createData.id, TEST_AIRPORT.id, 'Created document should have correct ID');
         console.log('✓ Create Airport test passed\n');
 
         // Save ETag for subsequent operations
@@ -105,7 +105,7 @@ async function runTests() {
         assert.strictEqual(getResult.statusCode, 200, 'Get should return 200');
         assert.ok(getResult.headers['etag'], 'Get should return an ETag');
         const getData = JSON.parse(getResult.body);
-        assert.strictEqual(getData.type, 'airport', 'Document should be of type airport');
+        assert.strictEqual(getData.type, TEST_AIRPORT.type, 'Document should be of type airport');
         assert.strictEqual(getData.id, TEST_AIRPORT.id, 'Document should have correct ID');
         console.log('✓ Get Airport test passed\n');
 
@@ -182,7 +182,7 @@ async function runTests() {
                 'If-Match': updateResult.headers['etag']
             }
         });
-        assert.strictEqual(deleteResult.statusCode, 200, 'Delete should return 200');
+        assert.strictEqual(deleteResult.statusCode, 204, 'Delete should return 204');
         assert.ok(deleteResult.headers['x-cb-mutationtoken'], 'Delete should return a mutation token');
         console.log('✓ Delete Airport test passed\n');
 

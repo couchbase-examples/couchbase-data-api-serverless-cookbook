@@ -131,7 +131,7 @@ async function preTest() {
             { 'If-Match': checkResult.headers.etag }
         );
         
-        if (deleteExistingResult.statusCode === 200) {
+        if (deleteExistingResult.statusCode === 204) {
             console.log('Successfully deleted existing test airport.');
         } else {
             console.error('Failed to delete existing test airport:', deleteExistingResult);
@@ -161,11 +161,13 @@ async function runTests() {
         console.log('Testing Create Airport...');
         const createResult = await makeRequest(
             'POST',
-            `/airports/${TEST_AIRPORT.id}`,
+            '/airports',
             TEST_AIRPORT
         );
-        assert.strictEqual(createResult.statusCode, 200, 'Create should return 200');
+        assert.strictEqual(createResult.statusCode, 201, 'Create should return 201');
         assert.ok(createResult.headers.etag, 'Create should return an ETag');
+        assert.strictEqual(createResult.body.type, TEST_AIRPORT.type, 'Created document should be of type airport');
+        assert.strictEqual(createResult.body.id, TEST_AIRPORT.id, 'Created document should have correct ID');
         console.log('✓ Create Airport test passed\n');
 
         // Save ETag for subsequent operations
@@ -176,7 +178,7 @@ async function runTests() {
         const getResult = await makeRequest('GET', `/airports/${TEST_AIRPORT.id}`);
         assert.strictEqual(getResult.statusCode, 200, 'Get should return 200');
         assert.ok(getResult.headers.etag, 'Get should return an ETag');
-        assert.strictEqual(getResult.body.type, 'airport', 'Document should be of type airport');
+        assert.strictEqual(getResult.body.type, TEST_AIRPORT.type, 'Document should be of type airport');
         assert.strictEqual(getResult.body.id, TEST_AIRPORT.id, 'Document should have correct ID');
         console.log('✓ Get Airport test passed\n');
 
@@ -240,7 +242,7 @@ async function runTests() {
             null,
             { 'If-Match': updateResult.headers.etag }
         );
-        assert.strictEqual(deleteResult.statusCode, 200, 'Delete should return 200');
+        assert.strictEqual(deleteResult.statusCode, 204, 'Delete should return 204');
         console.log('✓ Delete Airport test passed\n');
 
         // Verify Delete

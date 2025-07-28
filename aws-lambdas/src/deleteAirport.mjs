@@ -10,11 +10,12 @@ const formatError = function(error) {
     return {
         statusCode: error.statusCode || 500,
         headers: {
-            "Content-Type": "text/plain",
-            "x-amzn-ErrorType": error.code
+            "Content-Type": "application/json"
         },
         isBase64Encoded: false,
-        body: error.code + ": " + error.message
+        body: JSON.stringify({
+            error: error.message
+        })
     };
 };
 
@@ -24,22 +25,19 @@ export const handler = async (event) => {
         if (!process.env.DATA_API_URL) {
             return formatError({
                 statusCode: 500,
-                code: "ConfigurationError",
-                message: "DATA_API_URL environment variable is not set"
+                message: "Internal Server Error"
             });
         }
         if (!process.env.CLUSTER_PASSWORD) {
             return formatError({
                 statusCode: 500,
-                code: "ConfigurationError",
-                message: "CLUSTER_PASSWORD environment variable is not set"
+                message: "Internal Server Error"
             });
         }
         if (!process.env.USERNAME) {
             return formatError({
                 statusCode: 500,
-                code: "ConfigurationError",
-                message: "USERNAME environment variable is not set"
+                message: "Internal Server Error"
             });
         }
 
@@ -48,8 +46,7 @@ export const handler = async (event) => {
         if (!airportId) {
             return formatError({
                 statusCode: 400,
-                code: "ValidationError",
-                message: "Airport ID is required"
+                message: "Invalid airport ID"
             });
         }
 
@@ -75,35 +72,37 @@ export const handler = async (event) => {
 
         if (fetchResponse.ok) {
             return {
-                statusCode: 200,
+                statusCode: 204,
                 headers: {
-                    'content-type': 'application/json',
                     'x-cb-mutationtoken': fetchResponse.headers.get('x-cb-mutationtoken')
                 },
-                body: JSON.stringify({
-                    message: 'Airport deleted successfully',
-                    id: airportId
-                }),
+                body: '',
                 isBase64Encoded: false
             };
         } else {
-            const errorCode = fetchResponse.status === 404 ? 'DocumentNotFound' :
-                            fetchResponse.status === 403 ? 'InvalidAuth' :
-                            fetchResponse.status === 409 ? 'CasMismatch' :
-                            fetchResponse.status === 400 ? 'InvalidArgument' : 'InternalError';
-            return formatError({
-                statusCode: fetchResponse.status,
-                code: errorCode,
-                message: responseData || 'An error occurred processing the request'
-            });
+            if (fetchResponse.status === 404) {
+                return formatError({
+                    statusCode: 404,
+                    message: "Airport does not exist"
+                });
+            } else if (fetchResponse.status === 400) {
+                return formatError({
+                    statusCode: 400,
+                    message: "Invalid airport ID"
+                });
+            } else {
+                return formatError({
+                    statusCode: 500,
+                    message: "Internal Server Error"
+                });
+            }
         }
 
     } catch (error) {
         console.error('Lambda execution error:', error);
         return formatError({
-            statusCode: error.statusCode || 500,
-            code: error.code || "InternalError",
-            message: error.message || "An unexpected error occurred"
+            statusCode: 500,
+            message: "Internal Server Error"
         });
     }
 }; 

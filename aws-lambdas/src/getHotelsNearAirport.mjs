@@ -10,11 +10,12 @@ const formatError = function(error) {
     return {
         statusCode: error.statusCode || 500,
         headers: {
-            "Content-Type": "text/plain",
-            "x-amzn-ErrorType": error.code
+            "Content-Type": "application/json"
         },
         isBase64Encoded: false,
-        body: error.code + ": " + error.message
+        body: JSON.stringify({
+            error: error.message
+        })
     };
 };
 
@@ -170,9 +171,8 @@ export const handler = async (event) => {
     } catch (error) {
         console.error('Lambda execution error:', error);
         return formatError({
-            statusCode: error.statusCode || 500,
-            code: error.code || "InternalError",
-            message: error.message || "An unexpected error occurred"
+            statusCode: 500,
+            message: "Internal Server Error"
         });
     }
 };

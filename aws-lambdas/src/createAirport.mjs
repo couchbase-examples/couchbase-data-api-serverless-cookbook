@@ -10,11 +10,12 @@ const formatError = function(error) {
     return {
         statusCode: error.statusCode || 500,
         headers: {
-            "Content-Type": "text/plain",
-            "x-amzn-ErrorType": error.code
+            "Content-Type": "application/json"
         },
         isBase64Encoded: false,
-        body: error.code + ": " + error.message
+        body: JSON.stringify({
+            error: error.message
+        })
     };
 };
 
@@ -24,32 +25,19 @@ export const handler = async (event) => {
         if (!process.env.DATA_API_URL) {
             return formatError({
                 statusCode: 500,
-                code: "ConfigurationError",
                 message: "DATA_API_URL environment variable is not set"
             });
         }
         if (!process.env.CLUSTER_PASSWORD) {
             return formatError({
                 statusCode: 500,
-                code: "ConfigurationError",
                 message: "CLUSTER_PASSWORD environment variable is not set"
             });
         }
         if (!process.env.USERNAME) {
             return formatError({
                 statusCode: 500,
-                code: "ConfigurationError",
                 message: "USERNAME environment variable is not set"
-            });
-        }
-
-        // Extract airport ID from path parameters
-        const airportId = event.pathParameters?.airportId;
-        if (!airportId) {
-            return formatError({
-                statusCode: 400,
-                code: "ValidationError",
-                message: "Airport ID is required"
             });
         }
 
@@ -60,22 +48,18 @@ export const handler = async (event) => {
         } catch (e) {
             return formatError({
                 statusCode: 400,
-                code: "ValidationError",
                 message: "Invalid JSON in request body"
             });
         }
 
-        if (!airportData.airportname || !airportData.city || !airportData.country) {
+        // Extract airport ID from request body
+        const airportId = airportData.id;
+        if (!airportId) {
             return formatError({
                 statusCode: 400,
-                code: "ValidationError",
-                message: "Required fields missing: airportname, city, country"
+                message: "Invalid input data or missing required id field"
             });
         }
-
-        // Ensure the ID in the path matches the body
-        airportData.id = airportId;
-        airportData.type = 'airport';
 
         const baseUrl = process.env.DATA_API_URL;
         const username = process.env.USERNAME;
@@ -99,39 +83,46 @@ export const handler = async (event) => {
             body: body
         });
 
-        const responseData = await fetchResponse.text();
-
         if (fetchResponse.ok) {
             return {
-                statusCode: 200,
+                statusCode: 201,
                 headers: {
                     'content-type': 'application/json',
                     'etag': fetchResponse.headers.get('etag'),
                     'x-cb-mutationtoken': fetchResponse.headers.get('x-cb-mutationtoken')
                 },
-                body: JSON.stringify({
-                    message: 'Airport created successfully',
-                    id: airportId
-                }),
+                body: JSON.stringify(airportData),
                 isBase64Encoded: false
             };
         } else {
-            const errorCode = fetchResponse.status === 409 ? 'DocumentExists' :
-                            fetchResponse.status === 403 ? 'InvalidAuth' :
-                            fetchResponse.status === 400 ? 'InvalidArgument' : 'InternalError';
-            return formatError({
-                statusCode: fetchResponse.status,
-                code: errorCode,
-                message: responseData || 'An error occurred processing the request'
-            });
+            if (fetchResponse.status === 409) {
+                return formatError({
+                    statusCode: 409,
+                    message: "Airport already exists"
+                });
+            } else if (fetchResponse.status === 403) {
+                return formatError({
+                    statusCode: 500,
+                    message: "Internal Server Error"
+                });
+            } else if (fetchResponse.status === 400) {
+                return formatError({
+                    statusCode: 400,
+                    message: "Invalid input data or missing required id field"
+                });
+            } else {
+                return formatError({
+                    statusCode: 500,
+                    message: "Internal Server Error"
+                });
+            }
         }
 
     } catch (error) {
         console.error('Lambda execution error:', error);
         return formatError({
-            statusCode: error.statusCode || 500,
-            code: error.code || "InternalError",
-            message: error.message || "An unexpected error occurred"
+            statusCode: 500,
+            message: "Internal Server Error: " + error.message
         });
     }
 }; 

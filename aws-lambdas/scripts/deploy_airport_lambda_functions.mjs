@@ -14,13 +14,13 @@ const TIMEOUT = process.env.TIMEOUT || '30';
 
 // Lambda functions configuration
 const FUNCTIONS = [
-    { name: 'createAirport', method: 'POST', path: '/airports/{airportId}' },
-    { name: 'getAirport', method: 'GET', path: '/airports/{airportId}' },
-    { name: 'updateAirport', method: 'PUT', path: '/airports/{airportId}' },
-    { name: 'deleteAirport', method: 'DELETE', path: '/airports/{airportId}' },
-    { name: 'getAirportRoutes', method: 'GET', path: '/airports/routes' },
-    { name: 'getAirportAirlines', method: 'POST', path: '/airports/airlines' },
-    { name: 'getHotelsNearAirport', method: 'POST', path: '/airports/hotels/nearby' }
+    { name: 'createAirport' },
+    { name: 'getAirport' },
+    { name: 'updateAirport' },
+    { name: 'deleteAirport' },
+    { name: 'getAirportRoutes' },
+    { name: 'getAirportAirlines' },
+    { name: 'getHotelsNearAirport' }
 ];
 
 function executeCommand(cmd) {

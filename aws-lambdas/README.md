@@ -7,6 +7,21 @@ Note: The FTS features require:
 2. The travel-sample dataset with hotel documents in the inventory.hotel collection
 3. Hotels must have geo coordinates (`geo.lat` and `geo.lon` fields) for proximity search
 
+## API Endpoints
+
+Once deployed, the API Gateway will provide the following endpoints:
+
+### Airport Management
+- `POST /airports` - Create a new airport (airport ID provided in request body)
+- `GET /airports/{airportId}` - Get airport by ID
+- `PUT /airports/{airportId}` - Update an existing airport
+- `DELETE /airports/{airportId}` - Delete an airport (returns 204 No Content)
+
+### Airport Queries
+- `GET /airports/{airportCode}/routes` - Get all routes for an airport
+- `GET /airports/{airportCode}/airlines` - Get all airlines servicing an airport
+- `GET /airports/{airportId}/hotels/nearby/{distance}` - Find hotels near an airport
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v22.x or later)
