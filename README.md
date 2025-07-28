@@ -19,11 +19,7 @@ Choose your preferred serverless platform to get started:
 
 ### Architecture Diagrams
 
-#### Cloudflare Workers
-![Cloudflare Workers Architecture](./assets/cloudflare-workers.png)
-
-#### AWS Lambda
-![AWS Lambda Architecture](./assets/aws-lambdas.png)
+![Data API Architecture Architecture](./assets/DataAPI%20Architecture%20Diagram.drawio.png)
 
 ### Core Features
 
