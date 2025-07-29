@@ -1,0 +1,10 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "DATA_API_ENDPOINT": "your-capella-data-api-endpoint",
+    "DATA_API_USERNAME": "your-capella-cluster-username",
+    "DATA_API_PASSWORD": "your-capella-cluster-password"
+  }
+} 

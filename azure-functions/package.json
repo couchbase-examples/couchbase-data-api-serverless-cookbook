@@ -1,0 +1,31 @@
+{
+  "name": "azure-functions-couchbase-api",
+  "version": "1.0.0",
+  "description": "Azure Functions API for Couchbase Data API integration",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npm run clean && tsc",
+    "clean": "rimraf dist",
+    "start": "npm run build && cp package.json local.settings.json dist/ && func start --script-root dist",
+    "deploy": "node scripts/deploy.mjs",
+    "setup": "node scripts/setup-config.mjs"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.0.0",
+    "@azure/arm-appservice": "^14.0.0",
+    "@azure/arm-storage": "^18.0.0",
+    "@azure/arm-apimanagement": "^9.0.0",
+    "@azure/arm-resources": "^5.2.0",
+    "@azure/identity": "^4.0.0",
+    "@azure/core-auth": "^1.4.0",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "azure-functions-core-tools": "^4.0.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0",
+    "rimraf": "^3.0.2"
+  },
+  "author": "Couchbase",
+  "license": "Apache-2.0"
+} 

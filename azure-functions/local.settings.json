@@ -1,0 +1,15 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "DATA_API_ENDPOINT": "",
+    "DATA_API_USERNAME": "",
+    "DATA_API_PASSWORD": "",
+    "AZURE_SUBSCRIPTION_ID": "",
+    "AZURE_RESOURCE_GROUP": "couchbase-functions-rg",
+    "AZURE_LOCATION": "East US",
+    "AZURE_FUNCTION_APP_NAME": "couchbase-functions-app",
+    "AZURE_STORAGE_ACCOUNT": "couchbasestorage"
+  }
+} 
