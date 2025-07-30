@@ -1,119 +1,170 @@
-import { DefaultAzureCredential } from '@azure/identity';
-import { ResourceManagementClient } from '@azure/arm-resources';
-import { WebSiteManagementClient } from '@azure/arm-appservice';
-import { StorageManagementClient } from '@azure/arm-storage';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+#!/usr/bin/env node
+
+import { execSync } from 'child_process';
 import chalk from 'chalk';
+import fs from 'fs';
+import path from 'path';
 
-const execAsync = promisify(exec);
-
-// Default configuration values - all hardcoded for simplicity
-const CONFIG = {
-  subscriptionId: 'cc949f34-d2d5-491a-ba99-bf35ffc109f6',
-  resourceGroup: 'couchbase-functions-rg',
-  location: 'East US',
-  functionAppName: 'couchbase-functions-app',
-  storageAccount: 'couchbasestorage',
-  dataApiEndpoint: 'https://ey6xkcvjmzkr5-bk.data.sandbox.nonprod-project-avengers.com',
-  dataApiUsername: 'test',
-  dataApiPassword: 'Tester@123'
-};
-
-async function validateConfig() {
-  console.log(chalk.green('✅ Using default configuration'));
-  console.log(chalk.blue('📋 Deployment Configuration:'));
-  console.log(chalk.gray(`  Resource Group: ${CONFIG.resourceGroup}`));
-  console.log(chalk.gray(`  Location: ${CONFIG.location}`));
-  console.log(chalk.gray(`  Function App: ${CONFIG.functionAppName}`));
-  console.log(chalk.gray(`  Storage Account: ${CONFIG.storageAccount}`));
-  console.log(chalk.gray(`  Data API Endpoint: ${CONFIG.dataApiEndpoint}`));
-}
-
-async function ensureResourceGroup(client) {
-  console.log(chalk.blue('Ensuring resource group exists...'));
-  await client.resourceGroups.createOrUpdate(CONFIG.resourceGroup, {
-    location: CONFIG.location
-  });
-}
-
-async function ensureStorageAccount(client) {
-  console.log(chalk.blue('Ensuring storage account exists...'));
-  await client.storageAccounts.beginCreateAndWait(
-    CONFIG.resourceGroup,
-    CONFIG.storageAccount,
-    {
-      sku: { name: 'Standard_LRS' },
-      kind: 'StorageV2',
-      location: CONFIG.location
+// Load optional overrides from local.settings.json
+let localConfig = {};
+try {
+    const cfgPath = path.resolve(process.cwd(), 'local.settings.json');
+    if (fs.existsSync(cfgPath)) {
+        const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+        localConfig = raw.Values || {};
     }
-  );
-  
-  const keys = await client.storageAccounts.listKeys(
-    CONFIG.resourceGroup,
-    CONFIG.storageAccount
-  );
-  return `DefaultEndpointsProtocol=https;AccountName=${CONFIG.storageAccount};AccountKey=${keys.keys[0].value};EndpointSuffix=core.windows.net`;
+} catch (e) {
+    console.warn('Could not read local.settings.json – using defaults');
 }
 
-async function createFunctionApp(client, storageConnectionString) {
-  console.log(chalk.blue('Creating/updating function app...'));
-  await client.webApps.beginCreateOrUpdateAndWait(
-    CONFIG.resourceGroup,
-    CONFIG.functionAppName,
-    {
-      location: CONFIG.location,
-      kind: 'functionapp',
-      siteConfig: {
-        appSettings: [
-          { name: 'AzureWebJobsStorage', value: storageConnectionString },
-          { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'node' },
-          { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: '~22' },
-          // Couchbase Data API settings
-          { name: 'DATA_API_ENDPOINT', value: CONFIG.dataApiEndpoint },
-          { name: 'DATA_API_USERNAME', value: CONFIG.dataApiUsername },
-          { name: 'DATA_API_PASSWORD', value: CONFIG.dataApiPassword }
-        ],
-        nodeVersion: '~18'
-      }
+const requiredKeys = [
+    'RESOURCE_GROUP',
+    'STORAGE_ACCOUNT',
+    'FUNCTION_APP',
+    'AZURE_LOCATION'
+];
+requiredKeys.forEach(k => {
+    if (!localConfig[k]) {
+        console.error(`Missing required setting "${k}" in local.settings.json → Values section.`);
+        process.exit(1);
     }
-  );
+});
+
+const { RESOURCE_GROUP, STORAGE_ACCOUNT, FUNCTION_APP, AZURE_LOCATION: LOCATION } = localConfig;
+
+function runCommand(command, description) {
+    console.log(chalk.blue(`\n${description}...`));
+    try {
+        const output = execSync(command, { encoding: 'utf8' });
+        console.log(chalk.green('Success'));
+        return output;
+    } catch (error) {
+        console.error(chalk.red('Error:'), error.message);
+        process.exit(1);
+    }
 }
 
-async function deployFunction() {
-  try {
-    console.log(chalk.blue('🚀 Starting Azure Functions deployment...'));
+function checkPrerequisites() {
+    console.log(chalk.yellow('Checking prerequisites...'));
     
-    // Validate configuration
-    await validateConfig();
+    try {
+        execSync('az --version', { stdio: 'ignore' });
+        console.log(chalk.green(' Azure CLI is installed'));
+    } catch (error) {
+        console.error(chalk.red(' Azure CLI is not installed. Please install it first.'));
+        process.exit(1);
+    }
+    
+    try {
+        execSync('func --version', { stdio: 'ignore' });
+        console.log(chalk.green('Azure Functions Core Tools is installed'));
+    } catch (error) {
+        console.error(chalk.red('Azure Functions Core Tools is not installed. Please install it first.'));
+        process.exit(1);
+    }
+}
+
+function createAzureResources() {
+    console.log(chalk.yellow('\nCreating Azure resources...'));
+    
+    // Check if user is logged in
+    try {
+        execSync('az account show', { stdio: 'ignore' });
+    } catch (error) {
+        console.error(chalk.red('✗ You are not logged in to Azure. Please run "az login" first.'));
+        process.exit(1);
+    }
+    
+    // Create Resource Group
+    runCommand(
+        `az group create -g ${RESOURCE_GROUP} -l ${LOCATION}`,
+        'Creating Resource Group'
+    );
+    
+    // Create Storage Account
+    runCommand(
+        `az storage account create -n ${STORAGE_ACCOUNT} -g ${RESOURCE_GROUP} -l ${LOCATION} --sku Standard_LRS`,
+        'Creating Storage Account'
+    );
+    
+    // Create Function App
+    runCommand(
+        `az functionapp create -g ${RESOURCE_GROUP} --consumption-plan-location ${LOCATION} -n ${FUNCTION_APP} -s ${STORAGE_ACCOUNT} --runtime node --os-type Linux --functions-version 4`,
+        'Creating Function App'
+    );
+}
+
+function deployFunction() {
+    console.log(chalk.yellow('\nDeploying function to Azure...'));
     
     // Build the project
-    console.log(chalk.blue('📦 Building project...'));
-    await execAsync('npm run build');
-    console.log(chalk.green('✅ Build completed'));
+    runCommand('npm run build', 'Building TypeScript project');
     
-    // Initialize Azure clients
-    console.log(chalk.blue('🔐 Authenticating with Azure...'));
-    const credential = new DefaultAzureCredential();
-    const resourceClient = new ResourceManagementClient(credential, CONFIG.subscriptionId);
-    const webClient = new WebSiteManagementClient(credential, CONFIG.subscriptionId);
-    const storageClient = new StorageManagementClient(credential, CONFIG.subscriptionId);
-
-    // Ensure infrastructure exists
-    await ensureResourceGroup(resourceClient);
-    const storageConnectionString = await ensureStorageAccount(storageClient);
-    await createFunctionApp(webClient, storageConnectionString);
-
-    // Deploy the function using Azure Functions Core Tools
-    console.log(chalk.blue('🚀 Deploying functions...'));
-    await execAsync('func azure functionapp publish ' + CONFIG.functionAppName + ' --typescript');
-
-    console.log(chalk.green('🎉 Deployment completed successfully!'));
-    console.log(chalk.blue(`📱 Your function app is available at: https://${CONFIG.functionAppName}.azurewebsites.net`));
-  } catch (error) {
-    console.error(chalk.red('❌ Deployment failed:'), error);
-    process.exit(1);
-  }
+    // Deploy to Azure
+    runCommand(
+        `func azure functionapp publish ${FUNCTION_APP}`,
+        'Deploying to Azure Function App'
+    );
 }
 
-deployFunction(); 
+function configureCouchbaseCredentials() {
+    console.log(chalk.yellow('\nConfiguring Couchbase credentials...'));
+    
+    // Get Couchbase credentials from local.settings.json
+    const couchbaseConfig = {
+        DATA_API_ENDPOINT: localConfig.DATA_API_ENDPOINT,
+        DATA_API_USERNAME: localConfig.DATA_API_USERNAME,
+        DATA_API_PASSWORD: localConfig.DATA_API_PASSWORD
+    };
+    
+    // Check if Couchbase credentials are available
+    if (!couchbaseConfig.DATA_API_ENDPOINT || !couchbaseConfig.DATA_API_USERNAME || !couchbaseConfig.DATA_API_PASSWORD) {
+        console.log(chalk.yellow('Couchbase credentials not found in local.settings.json'));
+        console.log(chalk.cyan('Please configure them manually using:'));
+        console.log(chalk.cyan(`az functionapp config appsettings set --name ${FUNCTION_APP} --resource-group ${RESOURCE_GROUP} --settings DATA_API_ENDPOINT="your-endpoint" DATA_API_USERNAME="your-username" DATA_API_PASSWORD="your-password"`));
+        return;
+    }
+    
+    // Configure Couchbase credentials in Function App
+    runCommand(
+        `az functionapp config appsettings set --name ${FUNCTION_APP} --resource-group ${RESOURCE_GROUP} --settings DATA_API_ENDPOINT="${couchbaseConfig.DATA_API_ENDPOINT}" DATA_API_USERNAME="${couchbaseConfig.DATA_API_USERNAME}" DATA_API_PASSWORD="${couchbaseConfig.DATA_API_PASSWORD}"`,
+        'Setting Couchbase credentials in Function App'
+    );
+    
+    console.log(chalk.green(' Couchbase credentials configured successfully'));
+}
+
+function getFunctionUrls() {
+    console.log(chalk.yellow('\nGetting function URLs...'));
+    
+    const output = runCommand(
+        `az functionapp function list -g ${RESOURCE_GROUP} -n ${FUNCTION_APP} --query "[].{name: name, url: invokeUrlTemplate}"`,
+        'Retrieving function URLs'
+    );
+    
+    console.log(chalk.green('\nFunction URLs:'));
+    console.log(output);
+}
+
+function cleanup() {
+    console.log(chalk.yellow('\nTo clean up Azure resources, run:'));
+    console.log(chalk.cyan(`az group delete --name ${RESOURCE_GROUP}`));
+    console.log(chalk.yellow('Note: Also delete the Application Insights Resource Group (DefaultResourceGroup-*)'));
+}
+
+async function main() {
+    console.log(chalk.blue('🚀 Azure Functions Deployment Script'));
+    console.log(chalk.gray('Following the tutorial from Cloud Engineer Skills\n'));
+    
+    checkPrerequisites();
+    createAzureResources();
+    deployFunction();
+    configureCouchbaseCredentials();
+    getFunctionUrls();
+    cleanup();
+    
+    console.log(chalk.green('\nDeployment completed successfully!'));
+    console.log(chalk.blue('\nYou can now test your function using the URLs provided above.'));
+}
+
+main().catch(console.error); 

@@ -21,7 +21,6 @@ export const getConfig = () => {
     return config;
 };
 
-
 // Helper function to create Basic Auth header
 export const createAuthHeader = (username: string, password: string): string => {
     return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;

@@ -3,13 +3,14 @@
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "node",
-    "DATA_API_ENDPOINT": "",
-    "DATA_API_USERNAME": "",
-    "DATA_API_PASSWORD": "",
-    "AZURE_SUBSCRIPTION_ID": "",
-    "AZURE_RESOURCE_GROUP": "couchbase-functions-rg",
-    "AZURE_LOCATION": "East US",
-    "AZURE_FUNCTION_APP_NAME": "couchbase-functions-app",
-    "AZURE_STORAGE_ACCOUNT": "couchbasestorage"
+    "DATA_API_ENDPOINT": "https://your-capella-data-api-endpoint",
+    "DATA_API_USERNAME": "your-capella-cluster-username",
+    "DATA_API_PASSWORD": "your-capella-cluster-password",
+    "SUBSCRIPTION_ID": "your-azure-subscription-id",
+    "RESOURCE_GROUP": "your-resource-group-name",
+    "AZURE_LOCATION": "eastus",
+    "STORAGE_ACCOUNT": "your-storage-account-name",
+    "FUNCTION_APP": "your-function-app-name",
+    "APIM_NAME": "your-apim-name"
   }
-} 
+}
