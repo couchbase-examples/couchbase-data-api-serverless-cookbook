@@ -73,9 +73,6 @@ export const handler = async (event) => {
         if (fetchResponse.ok) {
             return {
                 statusCode: 204,
-                headers: {
-                    'x-cb-mutationtoken': fetchResponse.headers.get('x-cb-mutationtoken')
-                },
                 body: '',
                 isBase64Encoded: false
             };

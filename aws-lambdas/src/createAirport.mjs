@@ -90,8 +90,6 @@ export const handler = async (event) => {
                 statusCode: 201,
                 headers: {
                     'content-type': 'application/json',
-                    'etag': fetchResponse.headers.get('etag'),
-                    'x-cb-mutationtoken': fetchResponse.headers.get('x-cb-mutationtoken')
                 },
                 body: JSON.stringify(airportData),
                 isBase64Encoded: false

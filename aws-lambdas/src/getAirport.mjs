@@ -87,7 +87,6 @@ export const handler = async (event) => {
                 statusCode: 200,
                 headers: {
                     'content-type': 'application/json',
-                    'etag': fetchResponse.headers.get('etag')
                 },
                 body: responseData,
                 isBase64Encoded: false
