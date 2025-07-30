@@ -83,6 +83,18 @@ export const handler = async (event) => {
         const responseData = await fetchResponse.text();
 
         if (fetchResponse.ok) {
+            try {
+                const parsedData = JSON.parse(responseData);
+                parsedData.id = airportId;
+                responseData = JSON.stringify(parsedData);
+            } catch (e) {
+                console.error('Error parsing response data:', e);
+                return formatError({
+                    statusCode: 500,
+                    message: "Error parsing response data from " + url
+                });
+            }
+
             return {
                 statusCode: 200,
                 headers: {

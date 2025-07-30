@@ -60,6 +60,7 @@ export const handler = async (event) => {
                 message: "Invalid input data or missing required id field"
             });
         }
+        delete airportData.id; // Remove id from airportData to avoid duplication
 
         const baseUrl = process.env.DATA_API_URL;
         const username = process.env.USERNAME;
