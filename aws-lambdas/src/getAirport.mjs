@@ -5,13 +5,6 @@ const COLLECTION_CONFIG = {
     collection: 'airport'
 };
 
-// Document fields configuration
-const DOCUMENT_FIELDS = {
-    default: ['id', 'airportname', 'city', 'country', 'type'],
-    minimal: ['id', 'airportname'],
-    full: ['id', 'airportname', 'city', 'country', 'type', 'geo', 'faa', 'icao', 'tz']
-};
-
 // Error formatting function
 const formatError = function(error) {
     return {
@@ -24,11 +17,6 @@ const formatError = function(error) {
             error: error.message
         })
     };
-};
-
-// Helper function to build query parameters
-const buildQueryParams = (fields = DOCUMENT_FIELDS.default) => {
-    return fields.length > 0 ? `?fields=${fields.join(',')}` : '';
 };
 
 export const handler = async (event) => {
@@ -70,7 +58,7 @@ export const handler = async (event) => {
         const auth = Buffer.from(`${username}:${password}`).toString('base64');
 
         // Make the HTTP request using fetch
-        const url = `${baseUrl}/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}${buildQueryParams()}`;
+        const url = `${baseUrl}/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}`;
         
         const fetchResponse = await fetch(url, {
             method: 'GET',
@@ -80,7 +68,7 @@ export const handler = async (event) => {
             }
         });
 
-        const responseData = await fetchResponse.text();
+        let responseData = await fetchResponse.text();
 
         if (fetchResponse.ok) {
             try {

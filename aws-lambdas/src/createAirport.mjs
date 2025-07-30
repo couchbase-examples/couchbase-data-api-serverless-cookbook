@@ -60,7 +60,7 @@ export const handler = async (event) => {
                 message: "Invalid input data or missing required id field"
             });
         }
-        delete airportData.id; // Remove id from airportData to avoid duplication
+        delete airportData.id;
 
         const baseUrl = process.env.DATA_API_URL;
         const username = process.env.USERNAME;
@@ -85,6 +85,7 @@ export const handler = async (event) => {
         });
 
         if (fetchResponse.ok) {
+            airportData.id = airportId;
             return {
                 statusCode: 201,
                 headers: {
