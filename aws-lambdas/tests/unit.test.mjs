@@ -9,7 +9,7 @@ import { handler as getHotelsNearAirportHandler } from '../src/getHotelsNearAirp
 
 // Test configuration
 const TEST_CONFIG = {
-    BASE_URL: process.env.BASE_URL,
+    DATA_API_URL: process.env.DATA_API_URL,
     CLUSTER_PASSWORD: process.env.CLUSTER_PASSWORD,
     USERNAME: process.env.USERNAME
 };
@@ -32,11 +32,44 @@ const TEST_AIRPORT = {
 };
 
 // Validate environment variables
-const requiredEnvVars = ['BASE_URL', 'CLUSTER_PASSWORD', 'USERNAME'];
+const requiredEnvVars = ['DATA_API_URL', 'CLUSTER_PASSWORD', 'USERNAME'];
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 if (missingEnvVars.length > 0) {
     console.error('Missing required environment variables:', missingEnvVars.join(', '));
     process.exit(1);
+}
+
+async function preTest() {
+    // First, check if the test airport already exists and delete it if needed
+    console.log('Checking if test airport already exists...');
+    const checkResult = await getAirportHandler({
+        pathParameters: {
+            airportId: TEST_AIRPORT.id
+        }
+    });
+    
+    if (checkResult.statusCode === 200) {
+        console.log('Test airport already exists. Deleting it first...');
+        const deleteExistingResult = await deleteAirportHandler({
+            pathParameters: {
+                airportId: TEST_AIRPORT.id
+            },
+            headers: {
+                'If-Match': checkResult.headers['etag']
+            }
+        });
+        
+        if (deleteExistingResult.statusCode === 204) {
+            console.log('Successfully deleted existing test airport.');
+        } else {
+            console.error('Failed to delete existing test airport:', deleteExistingResult);
+            throw new Error('Failed to delete existing test airport');
+        }
+    } else if (checkResult.statusCode !== 404) {
+        console.error('Unexpected status when checking for test airport:', checkResult);
+    } else {
+        console.log('Test airport does not exist. Proceeding with creation.');
+    }
 }
 
 async function runTests() {
@@ -44,17 +77,19 @@ async function runTests() {
     let etag = null;
 
     try {
+        await preTest();
+
         // Test Create Airport
         console.log('Testing Create Airport operation...');
         const createResult = await createAirportHandler({
-            pathParameters: {
-                airportId: TEST_AIRPORT.id
-            },
             body: JSON.stringify(TEST_AIRPORT)
         });
-        assert.strictEqual(createResult.statusCode, 200, 'Create should return 200');
+        assert.strictEqual(createResult.statusCode, 201, 'Create should return 201');
         assert.ok(createResult.headers['etag'], 'Create should return an ETag');
         assert.ok(createResult.headers['x-cb-mutationtoken'], 'Create should return a mutation token');
+        const createData = JSON.parse(createResult.body);
+        assert.strictEqual(createData.type, TEST_AIRPORT.type, 'Created document should be of type airport');
+        assert.strictEqual(createData.id, TEST_AIRPORT.id, 'Created document should have correct ID');
         console.log('✓ Create Airport test passed\n');
 
         // Save ETag for subsequent operations
@@ -70,7 +105,7 @@ async function runTests() {
         assert.strictEqual(getResult.statusCode, 200, 'Get should return 200');
         assert.ok(getResult.headers['etag'], 'Get should return an ETag');
         const getData = JSON.parse(getResult.body);
-        assert.strictEqual(getData.type, 'airport', 'Document should be of type airport');
+        assert.strictEqual(getData.type, TEST_AIRPORT.type, 'Document should be of type airport');
         assert.strictEqual(getData.id, TEST_AIRPORT.id, 'Document should have correct ID');
         console.log('✓ Get Airport test passed\n');
 
@@ -125,7 +160,7 @@ async function runTests() {
         console.log('Testing Get Hotels Near Airport operation...');
         const hotelsResult = await getHotelsNearAirportHandler({
             pathParameters: {
-                airportId: 'airport_1254',
+                airportId: TEST_AIRPORT.id,
                 distance: '10km'
             }
         });
@@ -147,7 +182,7 @@ async function runTests() {
                 'If-Match': updateResult.headers['etag']
             }
         });
-        assert.strictEqual(deleteResult.statusCode, 200, 'Delete should return 200');
+        assert.strictEqual(deleteResult.statusCode, 204, 'Delete should return 204');
         assert.ok(deleteResult.headers['x-cb-mutationtoken'], 'Delete should return a mutation token');
         console.log('✓ Delete Airport test passed\n');
 

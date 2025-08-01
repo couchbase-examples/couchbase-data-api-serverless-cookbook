@@ -14,13 +14,13 @@ const TIMEOUT = process.env.TIMEOUT || '30';
 
 // Lambda functions configuration
 const FUNCTIONS = [
-    { name: 'createAirport', method: 'POST', path: '/airports/{airportId}' },
-    { name: 'getAirport', method: 'GET', path: '/airports/{airportId}' },
-    { name: 'updateAirport', method: 'PUT', path: '/airports/{airportId}' },
-    { name: 'deleteAirport', method: 'DELETE', path: '/airports/{airportId}' },
-    { name: 'getAirportRoutes', method: 'POST', path: '/airports/routes' },
-    { name: 'getAirportAirlines', method: 'POST', path: '/airports/airlines' },
-    { name: 'getHotelsNearAirport', method: 'POST', path: '/airports/hotels/nearby' }
+    { name: 'createAirport' },
+    { name: 'getAirport' },
+    { name: 'updateAirport' },
+    { name: 'deleteAirport' },
+    { name: 'getAirportRoutes' },
+    { name: 'getAirportAirlines' },
+    { name: 'getHotelsNearAirport' }
 ];
 
 function executeCommand(cmd) {
@@ -98,7 +98,7 @@ async function main() {
             
             // Create environment variables
             const environment = {
-                BASE_URL: process.env.BASE_URL,
+                DATA_API_URL: process.env.DATA_API_URL,
                 CLUSTER_PASSWORD: process.env.CLUSTER_PASSWORD,
                 USERNAME: process.env.USERNAME
             };
@@ -128,7 +128,7 @@ async function main() {
 }
 
 // Validate required environment variables
-const requiredEnvVars = ['LAMBDA_ROLE', 'REGION', 'BASE_URL', 'CLUSTER_PASSWORD', 'USERNAME'];
+const requiredEnvVars = ['LAMBDA_ROLE', 'REGION', 'DATA_API_URL', 'CLUSTER_PASSWORD', 'USERNAME'];
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {

@@ -117,6 +117,33 @@ async function makeRequest(method, path, body = null, headers = {}) {
     }
 }
 
+async function preTest() {
+    // Check if test airport already exists and delete it if needed
+    console.log('Checking if test airport already exists...');
+    const checkResult = await makeRequest('GET', `/airports/${TEST_AIRPORT.id}`);
+    
+    if (checkResult.statusCode === 200) {
+        console.log('Test airport already exists. Deleting it first...');
+        const deleteExistingResult = await makeRequest(
+            'DELETE',
+            `/airports/${TEST_AIRPORT.id}`,
+            null,
+            { 'If-Match': checkResult.headers.etag }
+        );
+        
+        if (deleteExistingResult.statusCode === 204) {
+            console.log('Successfully deleted existing test airport.');
+        } else {
+            console.error('Failed to delete existing test airport:', deleteExistingResult);
+            throw new Error('Failed to delete existing test airport');
+        }
+    } else if (checkResult.statusCode !== 404) {
+        console.error('Unexpected status when checking for test airport:', checkResult.statusCode);
+    } else {
+        console.log('Test airport does not exist. Proceeding with creation.');
+    }   
+}
+
 async function runTests() {
     console.log('Starting API Gateway Integration Tests...\n');
     
@@ -128,15 +155,19 @@ async function runTests() {
         
         let etag = null;
 
+        await preTest();
+
         // Test Create Airport
         console.log('Testing Create Airport...');
         const createResult = await makeRequest(
             'POST',
-            `/airports/${TEST_AIRPORT.id}`,
+            '/airports',
             TEST_AIRPORT
         );
-        assert.strictEqual(createResult.statusCode, 200, 'Create should return 200');
+        assert.strictEqual(createResult.statusCode, 201, 'Create should return 201');
         assert.ok(createResult.headers.etag, 'Create should return an ETag');
+        assert.strictEqual(createResult.body.type, TEST_AIRPORT.type, 'Created document should be of type airport');
+        assert.strictEqual(createResult.body.id, TEST_AIRPORT.id, 'Created document should have correct ID');
         console.log('✓ Create Airport test passed\n');
 
         // Save ETag for subsequent operations
@@ -147,7 +178,7 @@ async function runTests() {
         const getResult = await makeRequest('GET', `/airports/${TEST_AIRPORT.id}`);
         assert.strictEqual(getResult.statusCode, 200, 'Get should return 200');
         assert.ok(getResult.headers.etag, 'Get should return an ETag');
-        assert.strictEqual(getResult.body.type, 'airport', 'Document should be of type airport');
+        assert.strictEqual(getResult.body.type, TEST_AIRPORT.type, 'Document should be of type airport');
         assert.strictEqual(getResult.body.id, TEST_AIRPORT.id, 'Document should have correct ID');
         console.log('✓ Get Airport test passed\n');
 
@@ -190,6 +221,19 @@ async function runTests() {
         assert.ok(airlinesResult.body.metadata, 'Response should include metadata');
         console.log('✓ Get Airport Airlines test passed\n');
 
+        // Test Get Hotels Near Airport
+        console.log('Testing Get Hotels Near Airport...');
+        const hotelsResult = await makeRequest(
+            'GET',
+            `/airports/${TEST_AIRPORT.id}/hotels/nearby/10km`
+        );
+        assert.strictEqual(hotelsResult.statusCode, 200, 'Get Hotels should return 200');
+        assert.ok(hotelsResult.body.airport, 'Response should include airport details');
+        assert.ok(Array.isArray(hotelsResult.body.hotels), 'Response should include hotels array');
+        assert.ok(typeof hotelsResult.body.total_hotels_found === 'number', 'Response should include total_hotels_found');
+        assert.strictEqual(hotelsResult.body.search_criteria.distance, '10km', 'Response should include correct search distance');
+        console.log('✓ Get Hotels Near Airport test passed\n');
+
         // Test Delete Airport
         console.log('Testing Delete Airport...');
         const deleteResult = await makeRequest(
@@ -198,7 +242,7 @@ async function runTests() {
             null,
             { 'If-Match': updateResult.headers.etag }
         );
-        assert.strictEqual(deleteResult.statusCode, 200, 'Delete should return 200');
+        assert.strictEqual(deleteResult.statusCode, 204, 'Delete should return 204');
         console.log('✓ Delete Airport test passed\n');
 
         // Verify Delete
@@ -206,19 +250,6 @@ async function runTests() {
         const verifyDelete = await makeRequest('GET', `/airports/${TEST_AIRPORT.id}`);
         assert.strictEqual(verifyDelete.statusCode, 404, 'Get after Delete should return 404');
         console.log('✓ Delete verification passed\n');
-
-        // Test Get Hotels Near Airport
-        console.log('Testing Get Hotels Near Airport...');
-        const hotelsResult = await makeRequest(
-            'GET',
-            '/airports/airport_1254/hotels/nearby/10km'
-        );
-        assert.strictEqual(hotelsResult.statusCode, 200, 'Get Hotels should return 200');
-        assert.ok(hotelsResult.body.airport, 'Response should include airport details');
-        assert.ok(Array.isArray(hotelsResult.body.hotels), 'Response should include hotels array');
-        assert.ok(typeof hotelsResult.body.total_hotels_found === 'number', 'Response should include total_hotels_found');
-        assert.strictEqual(hotelsResult.body.search_criteria.distance, '10km', 'Response should include correct search distance');
-        console.log('✓ Get Hotels Near Airport test passed\n');
 
         console.log('All API Gateway integration tests passed! 🎉');
 

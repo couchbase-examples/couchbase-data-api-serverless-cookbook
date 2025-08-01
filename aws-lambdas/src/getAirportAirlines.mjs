@@ -9,22 +9,23 @@ const formatError = function(error) {
     return {
         statusCode: error.statusCode || 500,
         headers: {
-            "Content-Type": "text/plain",
-            "x-amzn-ErrorType": error.code
+            "Content-Type": "application/json"
         },
         isBase64Encoded: false,
-        body: error.code + ": " + error.message
+        body: JSON.stringify({
+            error: error.message
+        })
     };
 };
 
 export const handler = async (event) => {
     try {
         // Configuration validation
-        if (!process.env.BASE_URL) {
+        if (!process.env.DATA_API_URL) {
             return formatError({
                 statusCode: 500,
                 code: "ConfigurationError",
-                message: "BASE_URL environment variable is not set"
+                message: "DATA_API_URL environment variable is not set"
             });
         }
         if (!process.env.CLUSTER_PASSWORD) {
@@ -52,7 +53,7 @@ export const handler = async (event) => {
             });
         }
 
-        const baseUrl = process.env.BASE_URL;
+        const baseUrl = process.env.DATA_API_URL;
         const username = process.env.USERNAME;
         const password = process.env.CLUSTER_PASSWORD;
 
@@ -104,11 +105,8 @@ export const handler = async (event) => {
                 isBase64Encoded: false
             };
         } else {
-            const errorCode = fetchResponse.status === 403 ? 'InvalidAuth' :
-                            fetchResponse.status === 400 ? 'InvalidArgument' : 'InternalError';
             return formatError({
                 statusCode: fetchResponse.status,
-                code: errorCode,
                 message: responseData || 'An error occurred processing the request'
             });
         }
@@ -116,9 +114,8 @@ export const handler = async (event) => {
     } catch (error) {
         console.error('Lambda execution error:', error);
         return formatError({
-            statusCode: error.statusCode || 500,
-            code: error.code || "InternalError",
-            message: error.message || "An unexpected error occurred"
+            statusCode: 500,
+            message: "Internal Server Error"
         });
     }
 }; 
