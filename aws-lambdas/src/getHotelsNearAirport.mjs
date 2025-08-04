@@ -22,25 +22,25 @@ const formatError = function(error) {
 export const handler = async (event) => {
     try {
         // Configuration validation
-        if (!process.env.DATA_API_URL) {
+        if (!process.env.DATA_API_ENDPOINT) {
             return formatError({
                 statusCode: 500,
                 code: "ConfigurationError",
-                message: "DATA_API_URL environment variable is not set"
+                message: "DATA_API_ENDPOINT environment variable is not set"
             });
         }
-        if (!process.env.CLUSTER_PASSWORD) {
+        if (!process.env.DATA_API_PASSWORD) {
             return formatError({
                 statusCode: 500,
                 code: "ConfigurationError",
-                message: "CLUSTER_PASSWORD environment variable is not set"
+                message: "DATA_API_PASSWORD environment variable is not set"
             });
         }
-        if (!process.env.USERNAME) {
+        if (!process.env.DATA_API_USERNAME) {
             return formatError({
                 statusCode: 500,
                 code: "ConfigurationError",
-                message: "USERNAME environment variable is not set"
+                message: "DATA_API_USERNAME environment variable is not set"
             });
         }
 
@@ -56,9 +56,9 @@ export const handler = async (event) => {
             });
         }
 
-        const baseUrl = process.env.DATA_API_URL;
-        const username = process.env.USERNAME;
-        const password = process.env.CLUSTER_PASSWORD;
+        const baseUrl = process.env.DATA_API_ENDPOINT;
+        const username = process.env.DATA_API_USERNAME;
+        const password = process.env.DATA_API_PASSWORD;
 
         // Create Basic Auth header
         const auth = Buffer.from(`${username}:${password}`).toString('base64');
