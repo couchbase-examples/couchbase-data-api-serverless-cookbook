@@ -112,7 +112,7 @@ describe('updateAirport handler', () => {
 
 		// Assert
 		expectSuccessResponse(response, 200);
-		expect(responseData).toEqual({});
+		expect(responseData).toEqual({ message: 'Airport Updated Successfully' });
 	});
 
 	it('should handle 204 No Content response', async () => {
@@ -131,7 +131,7 @@ describe('updateAirport handler', () => {
 
 		// Assert
 		expectSuccessResponse(response, 200);
-		expect(responseData).toEqual({});
+		expect(responseData).toEqual({ message: 'Airport Updated Successfully' });
 	});
 
 	it('should return 500 when fetch fails', async () => {

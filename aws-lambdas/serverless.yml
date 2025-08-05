@@ -10,8 +10,8 @@ provider:
   stage: ${opt:stage, 'dev'}
   environment:    
     DATA_API_ENDPOINT: ${env:DATA_API_ENDPOINT}
-    DATA_API_PASSWORD: ${env:DATA_API_PASSWORD}
     DATA_API_USERNAME: ${env:DATA_API_USERNAME}
+    DATA_API_PASSWORD: ${env:DATA_API_PASSWORD}
   httpApi:
     cors: false
 
@@ -59,7 +59,7 @@ functions:
         - '!src/getHotelsNearAirport.mjs'
     events:
       - httpApi:
-          path: /airports/{airportId}
+          path: /airports
           method: post
 
   updateAirport:

@@ -1,5 +1,4 @@
 import { Context } from 'hono';
-import { AirportDocument } from '../types/airport';
 import { Env } from '../types/env';
 import { getAuthHeaders, getDocumentUrl } from '../utils/couchbase';
 
@@ -8,9 +7,9 @@ export const updateAirport = async (c: Context<{ Bindings: Env }>) => {
 		const documentKey = c.req.param('documentKey');
 		const env = c.env;
 		
-		let airportData: AirportDocument;
+		let airportData: any;
 		try {
-			airportData = await c.req.json<AirportDocument>();
+			airportData = await c.req.json();
 		} catch (e) {
 			return c.json(
 				{ error: 'Invalid JSON in request body for airport update' },
@@ -36,8 +35,7 @@ export const updateAirport = async (c: Context<{ Bindings: Env }>) => {
 			);
 		}
 		
-		const responseData = await response.json().catch(() => ({})) as any;
-		return c.json(responseData);
+		return c.json({ message: 'Airport Updated Successfully' }, 200);
 	} catch (error: any) {
 		console.error("Error handling PUT request:", error);
 		return c.json(

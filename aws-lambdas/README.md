@@ -2,8 +2,6 @@
 
 This project demonstrates how to build a serverless API using **AWS Lambda and API Gateway** that interfaces with Couchbase's Data API to manage airport data from the travel-sample dataset.
 
-**Deployment:** This project uses the **Serverless Framework** for streamlined deployment, providing Infrastructure as Code with individual function packaging for optimal performance.
-
 Note: The FTS features require:
 1. A Full Text Search index with geo-spatial mapping on hotel documents
 2. The travel-sample dataset with hotel documents in the inventory.hotel collection
@@ -49,9 +47,9 @@ Once deployed, the API Gateway will provide the following endpoints:
     npm install
     ```
 
-4. **Install Serverless Framework globally** (if not already installed)
+4. **Install Serverless Framework as a dev dependency**
     ```bash
-    npm install -g serverless
+    npm install -d serverless
     ```
 
 5. **Configure environment variables**

@@ -1,7 +1,5 @@
 import { Context } from 'hono';
 import { Env } from '../types/env';
-import { AirportDocument } from '../types/airport';
-import { HotelDocument } from '../types/hotel';
 import { getAuthHeaders, getDocumentUrl, getFTSSearchUrl } from '../utils/couchbase';
 
 // Type for FTS response
@@ -65,7 +63,7 @@ export const getHotelsNearAirport = async (c: Context<{ Bindings: Env }>) => {
 			);
 		}
 
-		const airportData = await airportResponse.json() as AirportDocument;
+		const airportData = await airportResponse.json() as any;
 		const { lat: latitude, lon: longitude } = airportData.geo;
 
 		console.log(`Airport ${airportId} coordinates: lat=${latitude}, lon=${longitude}`);
@@ -127,7 +125,7 @@ export const getHotelsNearAirport = async (c: Context<{ Bindings: Env }>) => {
 
 		// Format the response
 		const hotels = ftsData.hits?.map((hit, index) => {
-			const hotel = hit.fields as HotelDocument;
+			const hotel = hit.fields as any;
 			
 			return {
 				...hotel,

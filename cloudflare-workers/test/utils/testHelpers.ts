@@ -1,16 +1,15 @@
 import { vi, expect } from 'vitest';
 import { Env } from '../../src/types/env';
-import { AirportDocument } from '../../src/types/airport';
 
 // Test environment
 export const mockEnv: Env = {
 	DATA_API_USERNAME: 'test_user',
 	DATA_API_PASSWORD: 'test_password',
-	DATA_API_ENDPOINT: 'test.endpoint.com',
+	DATA_API_ENDPOINT: 'https://test.endpoint.com',
 };
 
 // Sample test data
-export const mockAirportData: AirportDocument = {
+export const mockAirportData: any = {
 	airportname: 'Test Airport',
 	city: 'Test City',
 	country: 'Test Country',

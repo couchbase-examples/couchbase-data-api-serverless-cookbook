@@ -17,20 +17,20 @@ export const getAuthHeaders = (env: Env) => {
 
 // Helper function to construct document URL
 export const getDocumentUrl = (env: Env, documentKey: string) => {
-	return `https://${env.DATA_API_ENDPOINT}/v1/buckets/${BUCKET_NAME}/scopes/${SCOPE_NAME}/collections/${COLLECTION_NAME}/documents/${documentKey}`;
+	return `${env.DATA_API_ENDPOINT}/v1/buckets/${BUCKET_NAME}/scopes/${SCOPE_NAME}/collections/${COLLECTION_NAME}/documents/${documentKey}`;
 };
 
 // Helper function to construct query URL
 export const getQueryUrl = (env: Env) => {
-	return `https://${env.DATA_API_ENDPOINT}/_p/query/query/service`;
+	return `${env.DATA_API_ENDPOINT}/_p/query/query/service`;
 };
 
 // Helper function to construct FTS search URL
 export const getFTSSearchUrl = (env: Env, indexName: string) => {
-	return `https://${env.DATA_API_ENDPOINT}/_p/fts/api/bucket/${BUCKET_NAME}/scope/${SCOPE_NAME}/index/${indexName}/query`;
+	return `${env.DATA_API_ENDPOINT}/_p/fts/api/bucket/${BUCKET_NAME}/scope/${SCOPE_NAME}/index/${indexName}/query`;
 };
 
 // Helper function to construct FTS index creation URL
 export const getFTSIndexUrl = (env: Env, indexName: string) => {
-	return `https://${env.DATA_API_ENDPOINT}/_p/fts/api/bucket/${BUCKET_NAME}/scope/${SCOPE_NAME}/index/${indexName}`;
+	return `${env.DATA_API_ENDPOINT}/_p/fts/api/bucket/${BUCKET_NAME}/scope/${SCOPE_NAME}/index/${indexName}`;
 }; 
