@@ -44,26 +44,6 @@ Start the development server:
 npm run dev
 ```
 
-## Testing
-
-This project includes comprehensive unit tests for all handler functions using [Vitest](https://vitest.dev/) and the [@cloudflare/vitest-pool-workers](https://developers.cloudflare.com/workers/testing/vitest-integration/) testing framework.
-
-### Running Tests
-
-Run all tests:
-```bash
-npm run test
-```
-
-Run specific test categories:
-```bash
-# Run only handler tests
-npm run test:handlers
-
-# Run a specific test file
-npm test test/handlers/getHotelsNearAirport.spec.ts
-```
-
 ## Deployment
 
 ### Prerequisites
@@ -110,7 +90,39 @@ wrangler secret put DATA_API_ENDPOINT
 npm run deploy
 ```
 
+## Testing
 
+This project includes comprehensive unit tests for all handler functions using [Vitest](https://vitest.dev/) and the [@cloudflare/vitest-pool-workers](https://developers.cloudflare.com/workers/testing/vitest-integration/) testing framework.
+
+### Running Tests
+
+Run all unit tests:
+```bash
+npm run test
+```
+
+Run specific test categories:
+```bash
+# Run only unit tests
+npm run test:unit
+
+# Run only handler tests
+npm run test:handlers
+
+# Run a specific test file
+npm test test/handlers/getHotelsNearAirport.spec.ts
+```
+
+### Integration Tests
+
+Integration tests are available to test against your deployed Worker. These tests perform real API calls to your deployed Cloudflare Worker endpoint.
+
+Run integration tests:
+```bash
+#Set environment variable and run
+export WORKER_URL="https://your-worker.your-subdomain.workers.dev"
+npm run test:integration
+```
 
 ## Project Structure
 
@@ -125,8 +137,6 @@ src/
 │   ├── getAirportAirlines.ts
 │   └── getHotelsNearAirport.ts
 ├── types/             # TypeScript type definitions
-│   ├── airport.ts
-│   ├── hotel.ts
 │   └── env.ts
 ├── utils/             # Utility functions
 └── index.ts           # Main application entry point
@@ -141,5 +151,6 @@ test/
 │   └── getHotelsNearAirport.spec.ts
 ├── utils/             # Test utilities and helpers
 │   └── testHelpers.ts
+├── integration.test.ts # Integration tests for deployed Worker
 └── setup.ts           # Test setup configuration
 ```

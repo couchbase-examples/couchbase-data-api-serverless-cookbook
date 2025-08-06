@@ -22,19 +22,19 @@ const formatError = function(error) {
 export const handler = async (event) => {
     try {
         // Configuration validation
-        if (!process.env.DATA_API_URL) {
+        if (!process.env.DATA_API_ENDPOINT) {
             return formatError({
                 statusCode: 500,
                 message: "Internal Server Error"
             });
         }
-        if (!process.env.CLUSTER_PASSWORD) {
+        if (!process.env.DATA_API_PASSWORD) {
             return formatError({
                 statusCode: 500,
                 message: "Internal Server Error"
             });
         }
-        if (!process.env.USERNAME) {
+        if (!process.env.DATA_API_USERNAME) {
             return formatError({
                 statusCode: 500,
                 message: "Internal Server Error"
@@ -72,9 +72,9 @@ export const handler = async (event) => {
         airportData.id = airportId;
         airportData.type = 'airport';
 
-        const baseUrl = process.env.DATA_API_URL;
-        const username = process.env.USERNAME;
-        const password = process.env.CLUSTER_PASSWORD;
+        const baseUrl = process.env.DATA_API_ENDPOINT;
+        const username = process.env.DATA_API_USERNAME;
+        const password = process.env.DATA_API_PASSWORD;
 
         // Create Basic Auth header
         const auth = Buffer.from(`${username}:${password}`).toString('base64');

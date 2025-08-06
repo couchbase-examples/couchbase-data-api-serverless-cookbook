@@ -2,7 +2,7 @@ import assert from 'assert';
 import { execSync } from 'child_process';
 
 // Configuration
-const REGION = process.env.REGION;
+const REGION = process.env.AWS_REGION;
 let API_ENDPOINT;
 
 // Test data
@@ -42,7 +42,7 @@ async function getApiEndpoint() {
     try {
         const cmd = `aws apigatewayv2 get-apis \
             --region ${REGION} \
-            --query "Items[?Name=='airport-data-api'].ApiEndpoint" \
+            --query "Items[?Name=='dev-couchbase-airport-api'].ApiEndpoint" \
             --output text`;
         
         const endpoint = executeCommand(cmd);

@@ -1,0 +1,20 @@
+# Exclude test files
+tests/
+test/
+*.test.*
+*.spec.*
+
+# Exclude development files
+scripts/
+.env*
+README.md
+
+# Exclude build artifacts
+node_modules/
+.serverless/
+zips/
+
+# Exclude git and editor files
+.git*
+.DS_Store
+*.log 

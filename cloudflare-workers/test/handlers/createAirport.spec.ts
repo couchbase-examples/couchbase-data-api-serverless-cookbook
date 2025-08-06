@@ -14,8 +14,10 @@ import {
 describe('createAirport handler', () => {
 	it('should parse request body and make correct API call', async () => {
 		// Arrange
-		const documentKey = 'airport_new';
-		const context = createMockContext({ documentKey }, {}, mockAirportData);
+		const airportId = 'airport_new';
+		const { id, ...airportDataWithoutId } = mockAirportData;
+		const requestBody = { id: airportId, ...airportDataWithoutId };
+		const context = createMockContext({}, {}, requestBody);
 		const mockResponse = createMockResponse({}, 201, 'Created');
 		mockFetch(mockResponse);
 
@@ -24,14 +26,14 @@ describe('createAirport handler', () => {
 
 		// Assert
 		expect(globalThis.fetch).toHaveBeenCalledWith(
-			expect.stringContaining(`/v1/buckets/travel-sample/scopes/inventory/collections/airport/documents/${documentKey}`),
+			expect.stringContaining(`/v1/buckets/travel-sample/scopes/inventory/collections/airport/documents/${airportId}`),
 			expect.objectContaining({
 				method: 'POST',
 				headers: expect.objectContaining({
 					'Authorization': expect.stringContaining('Basic'),
 					'Content-Type': 'application/json',
 				}),
-				body: JSON.stringify(mockAirportData),
+				body: JSON.stringify(airportDataWithoutId),
 			})
 		);
 		expectSuccessResponse(response, 201);
@@ -39,14 +41,14 @@ describe('createAirport handler', () => {
 
 	it('should handle custom airport data in request body', async () => {
 		// Arrange
-		const documentKey = 'custom_airport';
+		const airportId = 'custom_airport';
 		const customAirportData = {
-			...mockAirportData,
 			airportname: 'Custom Airport',
 			faa: 'CUS',
-			id: 7777,
+			icao: 'CUST',
 		};
-		const context = createMockContext({ documentKey }, {}, customAirportData);
+		const requestBody = { id: airportId, ...customAirportData };
+		const context = createMockContext({}, {}, requestBody);
 		const mockResponse = createMockResponse(customAirportData, 201);
 		mockFetch(mockResponse);
 
@@ -64,8 +66,7 @@ describe('createAirport handler', () => {
 
 	it('should return 400 when request body has invalid JSON', async () => {
 		// Arrange
-		const documentKey = 'airport_new';
-		const context = createMockContext({ documentKey });
+		const context = createMockContext({});
 		context.req.json = vi.fn().mockRejectedValue(new Error('Invalid JSON'));
 
 		// Act
@@ -80,8 +81,7 @@ describe('createAirport handler', () => {
 
 	it('should return 400 when request body has malformed JSON syntax', async () => {
 		// Arrange
-		const documentKey = 'airport_new';
-		const context = createMockContext({ documentKey });
+		const context = createMockContext({});
 		context.req.json = vi.fn().mockRejectedValue(new SyntaxError('Unexpected token'));
 
 		// Act
@@ -94,10 +94,28 @@ describe('createAirport handler', () => {
 		expect(globalThis.fetch).not.toHaveBeenCalled();
 	});
 
+	it('should return 400 when request body is missing required id field', async () => {
+		// Arrange
+		const { id, ...airportDataWithoutId } = mockAirportData;
+		const requestBody = { ...airportDataWithoutId }; // Missing id field
+		const context = createMockContext({}, {}, requestBody);
+
+		// Act
+		const response = await createAirport(context);
+		const responseData = await parseResponse(response);
+
+		// Assert
+		expectErrorResponse(response, 400);
+		expect(responseData.error).toBe('Missing required attribute: id');
+		expect(globalThis.fetch).not.toHaveBeenCalled();
+	});
+
 	it('should forward API response status and error message', async () => {
 		// Arrange
-		const documentKey = 'test_airport';
-		const context = createMockContext({ documentKey }, {}, mockAirportData);
+		const airportId = 'test_airport';
+		const { id, ...airportDataWithoutId } = mockAirportData;
+		const requestBody = { id: airportId, ...airportDataWithoutId };
+		const context = createMockContext({}, {}, requestBody);
 		const mockResponse = createMockErrorResponse(409, 'Conflict', 'Document already exists');
 		mockFetch(mockResponse);
 
@@ -114,8 +132,10 @@ describe('createAirport handler', () => {
 
 	it('should handle API response without JSON body', async () => {
 		// Arrange
-		const documentKey = 'airport_new';
-		const context = createMockContext({ documentKey }, {}, mockAirportData);
+		const airportId = 'airport_new';
+		const { id, ...airportDataWithoutId } = mockAirportData;
+		const requestBody = { id: airportId, ...airportDataWithoutId };
+		const context = createMockContext({}, {}, requestBody);
 		const mockResponse = new Response('', {
 			status: 201,
 			headers: { 'Content-Type': 'application/json' },
@@ -128,13 +148,15 @@ describe('createAirport handler', () => {
 
 		// Assert
 		expectSuccessResponse(response, 201);
-		expect(responseData).toEqual({});
+		expect(responseData).toEqual({ message: 'Airport Created Successfully' });
 	});
 
 	it('should return 500 when fetch fails', async () => {
 		// Arrange
-		const documentKey = 'airport_new';
-		const context = createMockContext({ documentKey }, {}, mockAirportData);
+		const airportId = 'airport_new';
+		const { id, ...airportDataWithoutId } = mockAirportData;
+		const requestBody = { id: airportId, ...airportDataWithoutId };
+		const context = createMockContext({}, {}, requestBody);
 		globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network connection failed'));
 
 		// Act
@@ -146,10 +168,12 @@ describe('createAirport handler', () => {
 		expect(responseData.error).toBe('Network connection failed');
 	});
 
-	it('should construct URL with document key from request params', async () => {
+	it('should construct URL with document key from request body id', async () => {
 		// Arrange
-		const documentKey = 'airport@test-123_special';
-		const context = createMockContext({ documentKey }, {}, mockAirportData);
+		const airportId = 'airport@test-123_special';
+		const { id, ...airportDataWithoutId } = mockAirportData;
+		const requestBody = { id: airportId, ...airportDataWithoutId };
+		const context = createMockContext({}, {}, requestBody);
 		const mockResponse = createMockResponse({}, 201);
 		mockFetch(mockResponse);
 
@@ -158,7 +182,7 @@ describe('createAirport handler', () => {
 
 		// Assert
 		expect(globalThis.fetch).toHaveBeenCalledWith(
-			expect.stringContaining(`/v1/buckets/travel-sample/scopes/inventory/collections/airport/documents/${documentKey}`),
+			expect.stringContaining(`/v1/buckets/travel-sample/scopes/inventory/collections/airport/documents/${airportId}`),
 			expect.any(Object)
 		);
 	});

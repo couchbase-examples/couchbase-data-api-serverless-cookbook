@@ -1,16 +1,14 @@
 import { Context } from 'hono';
-import { AirportDocument } from '../types/airport';
 import { Env } from '../types/env';
 import { getAuthHeaders, getDocumentUrl } from '../utils/couchbase';
 
 export const createAirport = async (c: Context<{ Bindings: Env }>) => {
 	try {
-		const documentKey = c.req.param('documentKey');
 		const env = c.env;
 		
-		let airportData: AirportDocument;
+		let requestBody: any;
 		try {
-			airportData = await c.req.json<AirportDocument>();
+			requestBody = await c.req.json();
 		} catch (e) {
 			return c.json(
 				{ error: 'Invalid JSON in request body for new airport' },
@@ -18,7 +16,16 @@ export const createAirport = async (c: Context<{ Bindings: Env }>) => {
 			);
 		}
 		
-		const url = getDocumentUrl(env, documentKey);
+		// Extract airport ID from body and validate
+		const { id: airportId, ...airportData } = requestBody;
+		if (!airportId) {
+			return c.json(
+				{ error: 'Missing required attribute: id' },
+				400
+			);
+		}
+		
+		const url = getDocumentUrl(env, airportId);
 		
 		console.log(`Making POST request to: ${url}`);
 		const response = await fetch(url, {
@@ -36,8 +43,7 @@ export const createAirport = async (c: Context<{ Bindings: Env }>) => {
 			);
 		}
 		
-		const responseData = await response.json().catch(() => ({})) as any;
-		return c.json(responseData, 201);
+		return c.json({ message: 'Airport Created Successfully' }, 201);
 	} catch (error: any) {
 		console.error("Error handling POST request:", error);
 		return c.json(

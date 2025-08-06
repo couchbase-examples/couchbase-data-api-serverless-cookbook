@@ -4,18 +4,22 @@
   "main": "index.mjs",
   "type": "module",
   "scripts": {
-    "deploy-airport-lambdas": "env-cmd -f .env node scripts/deploy_airport_lambda_functions.mjs",
-    "deploy-airport-api": "env-cmd -f .env node scripts/deploy_api_gateway_with_integrations.mjs",
     "test-unit": "env-cmd -f .env node tests/unit.test.mjs",
-    "test-integration": "env-cmd -f .env node tests/integration.test.mjs"
+    "test-integration": "env-cmd -f .env node tests/integration.test.mjs",
+    "deploy": "serverless deploy",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:prod": "serverless deploy --stage prod",
+    "offline": "serverless offline",
+    "remove": "serverless remove"
   },
   "author": "Viraj Agarwal",
   "description": "AWS Lambdas for the Couchbase Data API Serverless Cookbook",
   "dependencies": {
-    "@aws-sdk/client-lambda": "^3.0.0",
     "assert": "^2.0.0"
   },
   "devDependencies": {
-    "env-cmd": "^10.1.0"
+    "env-cmd": "^10.1.0",
+    "serverless": "^4.17.2",
+    "serverless-offline": "^13.3.0"
   }
 }

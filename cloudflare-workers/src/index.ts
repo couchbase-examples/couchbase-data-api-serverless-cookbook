@@ -28,10 +28,10 @@ app.get('/airports/:airportCode/routes', getAirportRoutes);
 app.get('/airports/:airportCode/airlines', getAirportAirlines);
 
 // Get airport
-app.get('/airports/:documentKey', getAirport);
+app.get('/airports/:airportId', getAirport);
 
-// Create airport
-app.post('/airports/:documentKey', createAirport);
+// Create airport (no ID in path, ID comes from body)
+app.post('/airports', createAirport);
 
 // Update airport
 app.put('/airports/:documentKey', updateAirport);

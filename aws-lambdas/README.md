@@ -12,7 +12,7 @@ Note: The FTS features require:
 Once deployed, the API Gateway will provide the following endpoints:
 
 ### Airport Management
-- `POST /airports` - Create a new airport (airport ID provided in request body)
+- `POST /airports` - Create a new airport
 - `GET /airports/{airportId}` - Get airport by ID
 - `PUT /airports/{airportId}` - Update an existing airport
 - `DELETE /airports/{airportId}` - Delete an airport (returns 204 No Content)
@@ -24,43 +24,49 @@ Once deployed, the API Gateway will provide the following endpoints:
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) (v22.x or later)
+- [Node.js](https://nodejs.org/) (v18.x or later)
 - [AWS CLI](https://aws.amazon.com/cli/) configured with appropriate credentials
-- [AWS IAM Role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) with Lambda and API Gateway permissions
+- [Serverless Framework](https://www.serverless.com/) (will be installed as dev dependency)
 - [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with Data API enabled
 - Couchbase [travel-sample bucket](https://docs.couchbase.com/dotnet-sdk/current/ref/travel-app-data-model.html) loaded
 
 ## Setup
 
-1. Clone the repository
-    ```
+1. **Clone the repository**
+    ```bash
     git clone https://github.com/couchbase-examples/couchbase-data-api-serverless-cookbook.git
     ```
-2. Navigate to the aws-lambdas directory:
+
+2. **Navigate to the aws-lambdas directory**
     ```bash
     cd couchbase-data-api-serverless-cookbook/aws-lambdas
     ```
-3. Install dependencies:
+
+3. **Install dependencies**
     ```bash
     npm install
     ```
-4. Configure your environment variables:
-   - Remove the `.sample` extension from the `.env.sample` file:
-   ```bash
-   mv .env.sample .env
-   ```
-   - Update the `.env` file with your values:
-   ```
-   # Lambda Configuration
-   LAMBDA_ROLE=<aws_lambda_role_arn>
-   REGION=<aws_region>
-   MEMORY_SIZE=128
-   TIMEOUT=3
 
-   # Cluster Credentials
-   DATA_API_URL=<capella-data-api-endpoint>
-   CLUSTER_PASSWORD=<capella-cluster-password>
-   USERNAME=<capella-cluster-username>
+4. **Install Serverless Framework as a dev dependency**
+    ```bash
+    npm install -d
+    ```
+
+5. **Configure environment variables**
+   Create a `.env` file in the `aws-lambdas` directory:
+   ```bash
+   touch .env
+   ```
+   
+   Add your Couchbase Data API credentials and AWS configuration:
+   ```
+   # Couchbase Data API Configuration
+   DATA_API_ENDPOINT=https://your-cluster.cloud.couchbase.com
+   DATA_API_USERNAME=your-database-username
+   DATA_API_PASSWORD=your-database-password
+   
+   # AWS Configuration (optional - defaults to ap-south-1)
+   AWS_REGION=ap-south-1
    ```
 
 ## FTS Index Setup
@@ -69,30 +75,9 @@ Before using the hotel search functionality, you need to create a Full Text Sear
 
 See [../scripts/README.md](../scripts/README.md) for detailed instructions on creating the required `hotel-geo-index` for geo-spatial hotel searches.
 
-## Testing
-
-### Local Testing
-
-Run the local test suite:
-```bash
-npm run test-unit
-```
-
-### API Gateway Integration Testing
-
-The integration tests will automatically discover your API Gateway endpoint and test all API operations through it:
-
-```bash
-npm run test-airport-api-aws
-```
-
-This will:
-- Automatically find your API Gateway endpoint
-- Test all API operations end-to-end
-- Verify response formats and status codes
-- Test error handling and edge cases
-
 ## Deployment
+
+This project uses the **Serverless Framework** for deployment, which provides a simple and efficient way to deploy all Lambda functions and API Gateway configuration together.
 
 ### Authentication
 
@@ -100,10 +85,12 @@ Before deploying, ensure your AWS CLI is properly authenticated.
 
 **Note:** This guide uses **IAM user long-term credentials** with `aws configure` as it's the easiest method to get started. However, [AWS does not recommend this approach](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-authentication.html) for production environments due to security considerations. For production deployments, consider using [IAM Identity Center short-term credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html) or other more secure authentication methods.
 
-#### Setup with AWS Configure
+### Setup with AWS Configure
+
 ```bash
 aws configure
 ```
+
 This will prompt you for:
 - AWS Access Key ID
 - AWS Secret Access Key  
@@ -112,43 +99,57 @@ This will prompt you for:
 
 For detailed instructions on creating IAM users and access keys, see the [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-authentication-user.html).
 
-### Deploy Lambda Functions
 
-Run the deployment script:
+### Deploy to AWS
+
+1. **Deploy to default stage (dev)**
+   ```bash
+   npm run deploy
+   ```
+
+2. **Deploy to specific stage**
+   ```bash
+   # Deploy to dev stage
+   npm run deploy:dev
+   
+   # Deploy to production stage
+   npm run deploy:prod
+   ```
+
+3. **Deploy to specific region**
+   ```bash
+   # Option 1: Using command line parameter
+   npm run deploy -- --region us-west-2
+   
+   # Option 2: Using environment variable (set AWS_REGION in .env file)
+   npm run deploy
+   ```
+
+
+### Local Development
+
+Run the API locally for development:
 ```bash
-npm run deploy-airport-lambdas
+npm run offline
 ```
 
-This script will:
-1. Create zip files for each Lambda function
-2. Deploy the functions to AWS Lambda
-3. Configure environment variables and runtime settings
+## Testing
 
-### Deploy API Gateway
-
-Run the API Gateway deployment script:
+Run the local test suite:
 ```bash
-npm run deploy-airport-api
+npm run test-unit
+npm run test-integration
 ```
-
-This script will:
-1. Create a new HTTP API Gateway
-2. Set up Lambda integrations
-3. Configure routes and CORS settings
-4. Create a default stage
-5. Output the API endpoint URL
 
 ## Project Structure
 
-Here's the structure of the aws-lambdas directory containing Lambda functions, deployment scripts, and tests:
+Here's the structure of the aws-lambdas directory:
 
 ```
 aws-lambdas/
-├── package.json                          # Dependencies and command definitions
+├── package.json                          # Dependencies and npm scripts
+├── serverless.yml                        # Serverless Framework configuration
 ├── README.md                             
-├── scripts/                              # Deployment automation
-│   ├── deploy_airport_lambda_functions.mjs
-│   └── deploy_api_gateway_with_integrations.mjs
 ├── src/                                  # Lambda function handlers
 │   ├── createAirport.mjs
 │   ├── deleteAirport.mjs
@@ -161,3 +162,8 @@ aws-lambdas/
     ├── integration.test.mjs
     └── unit.test.mjs
 ```
+
+
+## License
+
+Apache 2.0

@@ -8,6 +8,7 @@
 		"start": "wrangler dev",
 		"test": "vitest",
 		"test:unit": "vitest run --reporter=verbose",
+		"test:integration": "node test/integration.mjs",
 		"test:watch": "vitest --watch",
 		"test:coverage": "vitest run --coverage",
 		"test:handlers": "vitest run test/handlers/",
@@ -16,6 +17,7 @@
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.7.5",
 		"@cloudflare/workers-types": "^4.20250421.0",
+		"@types/node": "^24.2.0",
 		"typescript": "^5.5.2",
 		"vitest": "~3.0.7",
 		"wrangler": "^4.12.0"

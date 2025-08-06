@@ -9,9 +9,9 @@ import { handler as getHotelsNearAirportHandler } from '../src/getHotelsNearAirp
 
 // Test configuration
 const TEST_CONFIG = {
-    DATA_API_URL: process.env.DATA_API_URL,
-    CLUSTER_PASSWORD: process.env.CLUSTER_PASSWORD,
-    USERNAME: process.env.USERNAME
+    DATA_API_ENDPOINT: process.env.DATA_API_ENDPOINT,
+    DATA_API_PASSWORD: process.env.DATA_API_PASSWORD,
+    DATA_API_USERNAME: process.env.DATA_API_USERNAME
 };
 
 // Test data
@@ -32,7 +32,7 @@ const TEST_AIRPORT = {
 };
 
 // Validate environment variables
-const requiredEnvVars = ['DATA_API_URL', 'CLUSTER_PASSWORD', 'USERNAME'];
+const requiredEnvVars = ['DATA_API_ENDPOINT', 'DATA_API_PASSWORD', 'DATA_API_USERNAME'];
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 if (missingEnvVars.length > 0) {
     console.error('Missing required environment variables:', missingEnvVars.join(', '));
