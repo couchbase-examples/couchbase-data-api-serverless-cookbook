@@ -49,7 +49,7 @@ Once deployed, the API Gateway will provide the following endpoints:
 
 4. **Install Serverless Framework as a dev dependency**
     ```bash
-    npm install -d serverless
+    npm install -d
     ```
 
 5. **Configure environment variables**
