@@ -6,7 +6,6 @@
   "scripts": {
     "test-unit": "env-cmd -f .env node tests/unit.test.mjs",
     "test-integration": "env-cmd -f .env node tests/integration.test.mjs",
-    "create-fts-index": "env-cmd -f .env ./scripts/create-fts-index.sh",
     "deploy": "serverless deploy",
     "deploy:dev": "serverless deploy --stage dev",
     "deploy:prod": "serverless deploy --stage prod",
@@ -20,6 +19,7 @@
   },
   "devDependencies": {
     "env-cmd": "^10.1.0",
+    "serverless": "^4.17.2",
     "serverless-offline": "^13.3.0"
   }
 }

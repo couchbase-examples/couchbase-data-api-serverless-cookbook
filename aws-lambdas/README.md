@@ -26,7 +26,7 @@ Once deployed, the API Gateway will provide the following endpoints:
 
 - [Node.js](https://nodejs.org/) (v18.x or later)
 - [AWS CLI](https://aws.amazon.com/cli/) configured with appropriate credentials
-- [Serverless Framework](https://www.serverless.com/) installed globally
+- [Serverless Framework](https://www.serverless.com/) (will be installed as dev dependency)
 - [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with Data API enabled
 - Couchbase [travel-sample bucket](https://docs.couchbase.com/dotnet-sdk/current/ref/travel-app-data-model.html) loaded
 
