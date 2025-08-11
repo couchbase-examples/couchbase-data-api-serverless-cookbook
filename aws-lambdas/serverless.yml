@@ -1,6 +1,6 @@
 service: couchbase-airport-api
 
-frameworkVersion: '3'
+frameworkVersion: '4'
 useDotenv: true
 
 provider:

@@ -20,6 +20,6 @@
   "devDependencies": {
     "env-cmd": "^10.1.0",
     "serverless": "^4.17.2",
-    "serverless-offline": "^13.3.0"
+    "serverless-offline": "^14.4.0"
   }
 }
