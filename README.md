@@ -12,10 +12,8 @@ Choose your preferred serverless platform to get started:
 
 - **AWS Lambda**: [View Tutorial](./aws-lambdas/README.md)
 - **Cloudflare Workers**: [View Tutorial](./cloudflare-workers/README.md)
-
-### Coming Soon
-- **Azure Functions**
-- **Google Cloud Functions**
+- **Azure Functions**: [View Tutorial](./azure-functions/README.md)
+- **Google Cloud Functions**: [View Tutorial](./gcp/README.md)
 
 ### Architecture Diagrams
 
