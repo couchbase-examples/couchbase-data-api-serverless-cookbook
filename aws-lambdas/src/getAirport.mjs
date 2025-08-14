@@ -1,45 +1,11 @@
-// Collection configuration
-const COLLECTION_CONFIG = {
-    bucket: 'travel-sample',
-    scope: 'inventory',
-    collection: 'airport'
-};
-
-// Error formatting function
-const formatError = function(error) {
-    return {
-        statusCode: error.statusCode || 500,
-        headers: {
-            "Content-Type": "application/json"
-        },
-        isBase64Encoded: false,
-        body: JSON.stringify({
-            error: error.message
-        })
-    };
-};
+import { COLLECTION_CONFIG, validateDataApiConfig, getDataApiConfig, buildAuthHeader, formatError, jsonResponse } from './utils/common.mjs';
 
 export const handler = async (event) => {
     try {
-        // Configuration validation
-        if (!process.env.DATA_API_ENDPOINT) {
-            return formatError({
-                statusCode: 500,
-                message: "Internal Server Error"
-            });
-        }
-        if (!process.env.DATA_API_PASSWORD) {
-            return formatError({
-                statusCode: 500,
-                message: "Internal Server Error"
-            });
-        }
-        if (!process.env.DATA_API_USERNAME) {
-            return formatError({
-                statusCode: 500,
-                message: "Internal Server Error"
-            });
-        }
+        const cfgError = validateDataApiConfig();
+        if (cfgError) return formatError(cfgError);
+        const cfg = getDataApiConfig();
+        const baseUrl = cfg.baseUrl;
 
         // Extract airport ID from path parameters
         const airportId = event.pathParameters?.airportId;
@@ -50,12 +16,7 @@ export const handler = async (event) => {
             });
         }
 
-        const baseUrl = process.env.DATA_API_ENDPOINT;
-        const username = process.env.DATA_API_USERNAME;
-        const password = process.env.DATA_API_PASSWORD;
-
-        // Create Basic Auth header
-        const auth = Buffer.from(`${username}:${password}`).toString('base64');
+        const auth = buildAuthHeader(cfg.username, cfg.password);
 
         // Make the HTTP request using fetch
         const url = `${baseUrl}/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}`;
@@ -85,9 +46,7 @@ export const handler = async (event) => {
 
             return {
                 statusCode: 200,
-                headers: {
-                    'content-type': 'application/json',
-                },
+                headers: { 'content-type': 'application/json' },
                 body: responseData,
                 isBase64Encoded: false
             };

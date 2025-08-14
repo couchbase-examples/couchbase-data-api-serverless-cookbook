@@ -1,45 +1,11 @@
-// Collection configuration
-const COLLECTION_CONFIG = {
-    bucket: 'travel-sample',
-    scope: 'inventory',
-    collection: 'airport'
-};
-
-// Error formatting function
-const formatError = function(error) {
-    return {
-        statusCode: error.statusCode || 500,
-        headers: {
-            "Content-Type": "application/json"
-        },
-        isBase64Encoded: false,
-        body: JSON.stringify({
-            error: error.message
-        })
-    };
-};
+import { COLLECTION_CONFIG, validateDataApiConfig, getDataApiConfig, buildAuthHeader, formatError, jsonResponse } from './utils/common.mjs';
 
 export const handler = async (event) => {
     try {
-        // Configuration validation
-        if (!process.env.DATA_API_ENDPOINT) {
-            return formatError({
-                statusCode: 500,
-                message: "Internal Server Error"
-            });
-        }
-        if (!process.env.DATA_API_PASSWORD) {
-            return formatError({
-                statusCode: 500,
-                message: "Internal Server Error"
-            });
-        }
-        if (!process.env.DATA_API_USERNAME) {
-            return formatError({
-                statusCode: 500,
-                message: "Internal Server Error"
-            });
-        }
+        const cfgError = validateDataApiConfig();
+        if (cfgError) return formatError(cfgError);
+        const cfg = getDataApiConfig();
+        const baseUrl = cfg.baseUrl;
 
         // Extract airport ID from path parameters
         const airportId = event.pathParameters?.airportId;
@@ -72,13 +38,7 @@ export const handler = async (event) => {
         airportData.id = airportId;
         airportData.type = 'airport';
 
-        const baseUrl = process.env.DATA_API_ENDPOINT;
-        const username = process.env.DATA_API_USERNAME;
-        const password = process.env.DATA_API_PASSWORD;
-
-        // Create Basic Auth header
-        const auth = Buffer.from(`${username}:${password}`).toString('base64');
-
+        const auth = buildAuthHeader(cfg.username, cfg.password);
         const body = JSON.stringify(airportData);
 
         // Make the HTTP request using fetch
@@ -96,33 +56,10 @@ export const handler = async (event) => {
 
         const responseData = await fetchResponse.text();
 
-        if (fetchResponse.ok) {
-            return {
-                statusCode: 200,
-                headers: {
-                    'content-type': 'application/json',
-                },
-                body: JSON.stringify(airportData),
-                isBase64Encoded: false
-            };
-        } else {
-            if (fetchResponse.status === 404) {
-                return formatError({
-                    statusCode: 404,
-                    message: "Airport does not exist"
-                });
-            } else if (fetchResponse.status === 400) {
-                return formatError({
-                    statusCode: 400,
-                    message: "Invalid input data"
-                });
-            } else {
-                return formatError({
-                    statusCode: 500,
-                    message: "Internal Server Error"
-                });
-            }
-        }
+        if (fetchResponse.ok) return jsonResponse(200, airportData);
+        if (fetchResponse.status === 404) return formatError({ statusCode: 404, message: "Airport does not exist" });
+        if (fetchResponse.status === 400) return formatError({ statusCode: 400, message: "Invalid input data" });
+        return formatError({ statusCode: 500, message: "Internal Server Error" });
 
     } catch (error) {
         console.error('Lambda execution error:', error);

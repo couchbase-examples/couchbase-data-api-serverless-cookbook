@@ -1,47 +1,11 @@
-// Collection configuration
-const COLLECTION_CONFIG = {
-    bucket: 'travel-sample',
-    scope: 'inventory'
-};
-
-// Error formatting function
-const formatError = function(error) {
-    return {
-        statusCode: error.statusCode || 500,
-        headers: {
-            "Content-Type": "application/json"
-        },
-        isBase64Encoded: false,
-        body: JSON.stringify({
-            error: error.message
-        })
-    };
-};
+import { COLLECTION_CONFIG, validateDataApiConfig, getDataApiConfig, buildAuthHeader, formatError, jsonResponse } from './utils/common.mjs';
 
 export const handler = async (event) => {
     try {
-        // Configuration validation
-        if (!process.env.DATA_API_ENDPOINT) {
-            return formatError({
-                statusCode: 500,
-                code: "ConfigurationError",
-                message: "DATA_API_ENDPOINT environment variable is not set"
-            });
-        }
-        if (!process.env.DATA_API_PASSWORD) {
-            return formatError({
-                statusCode: 500,
-                code: "ConfigurationError",
-                message: "DATA_API_PASSWORD environment variable is not set"
-            });
-        }
-        if (!process.env.DATA_API_USERNAME) {
-            return formatError({
-                statusCode: 500,
-                code: "ConfigurationError",
-                message: "DATA_API_USERNAME environment variable is not set"
-            });
-        }
+        const cfgError = validateDataApiConfig();
+        if (cfgError) return formatError(cfgError);
+        const cfg = getDataApiConfig();
+        const baseUrl = cfg.baseUrl;
 
         // Get parameters from path parameters
         const airportCode = event.pathParameters?.airportCode;
@@ -53,12 +17,7 @@ export const handler = async (event) => {
             });
         }
 
-        const baseUrl = process.env.DATA_API_ENDPOINT;
-        const username = process.env.DATA_API_USERNAME;
-        const password = process.env.DATA_API_PASSWORD;
-
-        // Create Basic Auth header
-        const auth = Buffer.from(`${username}:${password}`).toString('base64');
+        const auth = buildAuthHeader(cfg.username, cfg.password);
 
         // Create query
         const queryBody = {
@@ -88,32 +47,18 @@ export const handler = async (event) => {
         });
 
         const responseData = await fetchResponse.text();
-
         if (fetchResponse.ok) {
             const queryResponse = JSON.parse(responseData);
-            return {
-                statusCode: 200,
-                headers: {
-                    'content-type': 'application/json'
-                },
-                body: JSON.stringify({
-                    routes: queryResponse.results,
-                    metadata: {
-                        resultCount: queryResponse.metrics.resultCount,
-                        executionTime: queryResponse.metrics.executionTime
-                    }
-                }),
-                isBase64Encoded: false
-            };
-        } else {
-            const errorCode = fetchResponse.status === 403 ? 'InvalidAuth' :
-                            fetchResponse.status === 400 ? 'InvalidArgument' : 'InternalError';
-            return formatError({
-                statusCode: fetchResponse.status,
-                code: errorCode,
-                message: responseData || 'An error occurred processing the request'
+            return jsonResponse(200, {
+                routes: queryResponse.results,
+                metadata: {
+                    resultCount: queryResponse.metrics.resultCount,
+                    executionTime: queryResponse.metrics.executionTime
+                }
             });
         }
+        const errorCode = fetchResponse.status === 403 ? 'InvalidAuth' : fetchResponse.status === 400 ? 'InvalidArgument' : 'InternalError';
+        return formatError({ statusCode: fetchResponse.status, code: errorCode, message: responseData || 'An error occurred processing the request' });
 
     } catch (error) {
         console.error('Lambda execution error:', error);
