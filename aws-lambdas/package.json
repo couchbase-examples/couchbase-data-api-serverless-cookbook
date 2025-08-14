@@ -15,7 +15,7 @@
   "author": "Viraj Agarwal",
   "description": "AWS Lambdas for the Couchbase Data API Serverless Cookbook",
   "dependencies": {
-    "assert": "^2.0.0"
+    "assert": "2.0.0"
   },
   "devDependencies": {
     "env-cmd": "^10.1.0",
