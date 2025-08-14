@@ -1,14 +1,13 @@
-import { COLLECTION_CONFIG, validateDataApiConfig, getDataApiConfig, buildAuthHeader, formatError, jsonResponse } from './utils/common.mjs';
+import { COLLECTION_CONFIG, validateDataApiConfig, getDataApiConfig, getDocumentUrl, buildAuthHeader, formatError, jsonResponse } from './utils/common.mjs';
 
 export const handler = async (event) => {
     try {
-        // Validate DATA API config
+        // 1. Validate configuration
         const cfgError = validateDataApiConfig();
         if (cfgError) return formatError(cfgError);
         const cfg = getDataApiConfig();
-        const baseUrl = cfg.baseUrl;
 
-        // Parse request body
+        // 2. Parse and validate input
         let airportData;
         try {
             airportData = JSON.parse(event.body || '{}');
@@ -19,7 +18,7 @@ export const handler = async (event) => {
             });
         }
 
-        // Extract airport ID from request body
+        // 2b. Extract and validate airport ID
         const airportId = airportData.id;
         if (!airportId) {
             return formatError({
@@ -29,11 +28,12 @@ export const handler = async (event) => {
         }
         delete airportData.id;
 
+        // 3. Prepare Data API request
         const auth = buildAuthHeader(cfg.username, cfg.password);
         const body = JSON.stringify(airportData);
 
-        // Make the HTTP request using fetch
-        const url = `${baseUrl}/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}`;
+        // 4. Execute Data API request
+        const url = getDocumentUrl(airportId);
         
         const fetchResponse = await fetch(url, {
             method: 'POST',
@@ -45,6 +45,7 @@ export const handler = async (event) => {
             body: body
         });
 
+        // 5. Handle response and format output
         if (fetchResponse.ok) {
             airportData.id = airportId;
             return jsonResponse(201, airportData);
@@ -62,9 +63,6 @@ export const handler = async (event) => {
 
     } catch (error) {
         console.error('Lambda execution error:', error);
-        return formatError({
-            statusCode: 500,
-            message: "Internal Server Error: " + error.message
-        });
+        return formatError({ statusCode: 500, message: "Internal Server Error: " + error.message });
     }
 }; 

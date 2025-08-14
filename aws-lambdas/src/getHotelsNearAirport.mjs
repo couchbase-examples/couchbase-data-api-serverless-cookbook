@@ -1,13 +1,13 @@
-import { COLLECTION_CONFIG, validateDataApiConfig, getDataApiConfig, buildAuthHeader, formatError, jsonResponse } from './utils/common.mjs';
+import { COLLECTION_CONFIG, validateDataApiConfig, getDataApiConfig, getDocumentUrl, getFTSSearchUrl, buildAuthHeader, formatError, jsonResponse } from './utils/common.mjs';
 
 export const handler = async (event) => {
     try {
+        // 1. Validate configuration
         const cfgError = validateDataApiConfig();
         if (cfgError) return formatError(cfgError);
         const cfg = getDataApiConfig();
-        const baseUrl = cfg.baseUrl;
 
-        // Get parameters from path parameters
+        // 2. Parse and validate input
         const airportId = event.pathParameters?.airportId;
         const distance = event.pathParameters?.distance || "5km";
 
@@ -19,10 +19,11 @@ export const handler = async (event) => {
             });
         }
 
+        // 3. Prepare Data API request
         const auth = buildAuthHeader(cfg.username, cfg.password);
 
-        // Step 1: Get airport document
-        const airportUrl = `${baseUrl}/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}`;
+        // 4. Execute Data API requests
+        const airportUrl = getDocumentUrl(airportId);
         
         const airportFetchResponse = await fetch(airportUrl, {
             method: 'GET',
@@ -43,7 +44,7 @@ export const handler = async (event) => {
         const airportResponse = await airportFetchResponse.json();
         const { lat: latitude, lon: longitude } = airportResponse.geo;
 
-        // Step 2: Search for nearby hotels using FTS
+        // 4b. Execute FTS request
         const ftsQuery = {
             from: 0,
             size: 20,
@@ -72,7 +73,7 @@ export const handler = async (event) => {
 
         const body = JSON.stringify(ftsQuery);
 
-        const ftsUrl = `${baseUrl}/_p/fts/api/bucket/${COLLECTION_CONFIG.bucket}/scope/${COLLECTION_CONFIG.scope}/index/hotel-geo-index/query`;
+        const ftsUrl = getFTSSearchUrl('hotel-geo-index');
         
         const ftsFetchResponse = await fetch(ftsUrl, {
             method: 'POST',
@@ -84,6 +85,7 @@ export const handler = async (event) => {
             body: body
         });
 
+        // 5. Handle response and format output
         if (!ftsFetchResponse.ok) {
             return formatError({
                 statusCode: ftsFetchResponse.status,
