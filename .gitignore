@@ -3,3 +3,4 @@ node_modules/
 zips/
 .DS_Store
 /aws-lambdas/package-lock.json
+/aws-lambdas/.serverless/

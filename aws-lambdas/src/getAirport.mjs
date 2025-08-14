@@ -8,7 +8,7 @@ export const handler = async (event) => {
         const cfg = getDataApiConfig(); 
 
         // 2. Parse and validate input
-        const airportId = event.pathParameters?.airportId;
+        const airportId = event?.pathParameters?.airportId;
         if (!airportId) {
             return formatError({
                 statusCode: 400,

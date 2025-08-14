@@ -46,6 +46,7 @@ export const handler = async (event) => {
         });
 
         // 5. Handle response and format output
+        const responseText = await fetchResponse.text();
         if (fetchResponse.ok) {
             airportData.id = airportId;
             return jsonResponse(201, airportData);
@@ -57,9 +58,9 @@ export const handler = async (event) => {
             return formatError({ statusCode: 500, message: "Internal Server Error" });
         }
         if (fetchResponse.status === 400) {
-            return formatError({ statusCode: 400, message: "Invalid input data or missing required id field" });
+            return formatError({ statusCode: 400, message: `Invalid input data: ${responseText}` });
         }
-        return formatError({ statusCode: 500, message: "Internal Server Error" });
+        return formatError({ statusCode: 500, message: `Internal Server Error: ${responseText}` });
 
     } catch (error) {
         console.error('Lambda execution error:', error);
