@@ -33,7 +33,8 @@ export const buildAuthHeader = function(username, password) {
 
 export const getDocumentUrl = function(docId) {
     const cfg = getDataApiConfig();
-    return `${cfg.baseUrl}/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${docId}`;
+    const safeId = encodeURIComponent(docId);
+    return `${cfg.baseUrl}/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${safeId}`;
 };
 
 export const getQueryUrl = function() {
@@ -43,7 +44,8 @@ export const getQueryUrl = function() {
 
 export const getFTSSearchUrl = function(indexName) {
     const cfg = getDataApiConfig();
-    return `${cfg.baseUrl}/_p/fts/api/bucket/${COLLECTION_CONFIG.bucket}/scope/${COLLECTION_CONFIG.scope}/index/${indexName}/query`;
+    const safeIndexName = encodeURIComponent(indexName);
+    return `${cfg.baseUrl}/_p/fts/api/bucket/${COLLECTION_CONFIG.bucket}/scope/${COLLECTION_CONFIG.scope}/index/${safeIndexName}/query`;
 };
 
 export const formatError = function(error) {

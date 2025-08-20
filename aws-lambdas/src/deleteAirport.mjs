@@ -26,7 +26,7 @@ export const handler = async (event) => {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json',
-                'Authorization': `Basic ${auth}`
+                'Authorization': auth
             }
         });
 
