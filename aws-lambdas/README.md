@@ -125,6 +125,24 @@ For detailed instructions on creating IAM users and access keys, see the [AWS do
    npm run deploy
    ```
 
+### CloudFormation Stacks & Safe Cleanup
+
+When you [deploy with the Serverless Framework](https://www.serverless.com/framework/docs/providers/aws/guide/deploying) (`npm run deploy`), it first uploads your packaged Lambda artefacts to an **S3 deployment bucket** and then creates/updates an **[AWS CloudFormation stack](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacks.html)**. CloudFormation is responsible for orchestrating every resource described by the framework – Lambda functions, API Gateway resources, IAM roles, CloudWatch log groups and others – ensuring they are created, updated or rolled back as a single atomic unit.
+
+#### Deleting the environment
+
+If you need to tear everything down, **do _not_ delete individual resources manually**. Instead, delete the **CloudFormation stack** itself – the Serverless Framework provides a convenient wrapper via **[`serverless remove`](https://www.serverless.com/framework/docs/providers/aws/cli-reference/remove)**:
+
+```bash
+npm run remove             # wrapper for "serverless remove"
+```
+
+Deleting the stack will remove all resources it created. The only exception is the S3 deployment bucket, which is not part of the stack in the [newer version (v4) of Serverless](https://www.serverless.com/framework/docs/providers/aws/guide/deploying#deployment-method). You can delete this bucket manually afterwards if you no longer need it.
+
+#### Why you should avoid manual deletion
+
+Removing or altering resources outside CloudFormation leaves the stack in an **inconsistent** state. Subsequent `serverless deploy` commands will fail because CloudFormation refuses to recreate resources that it believes still exist. Always let CloudFormation manage the full lifecycle of your infrastructure.
+
 
 ### Local Development
 

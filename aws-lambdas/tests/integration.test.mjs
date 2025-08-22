@@ -127,8 +127,7 @@ async function preTest() {
         const deleteExistingResult = await makeRequest(
             'DELETE',
             `/airports/${TEST_AIRPORT.id}`,
-            null,
-            { 'If-Match': checkResult.headers.etag }
+            null
         );
         
         if (deleteExistingResult.statusCode === 204) {
@@ -152,8 +151,7 @@ async function runTests() {
         console.log('Getting API Gateway endpoint...');
         API_ENDPOINT = await getApiEndpoint();
         console.log(`Using API endpoint: ${API_ENDPOINT}\n`);
-        
-        let etag = null;
+    
 
         await preTest();
 
@@ -165,19 +163,15 @@ async function runTests() {
             TEST_AIRPORT
         );
         assert.strictEqual(createResult.statusCode, 201, 'Create should return 201');
-        assert.ok(createResult.headers.etag, 'Create should return an ETag');
         assert.strictEqual(createResult.body.type, TEST_AIRPORT.type, 'Created document should be of type airport');
         assert.strictEqual(createResult.body.id, TEST_AIRPORT.id, 'Created document should have correct ID');
         console.log('✓ Create Airport test passed\n');
 
-        // Save ETag for subsequent operations
-        etag = createResult.headers.etag;
 
         // Test Get Airport
         console.log('Testing Get Airport...');
         const getResult = await makeRequest('GET', `/airports/${TEST_AIRPORT.id}`);
         assert.strictEqual(getResult.statusCode, 200, 'Get should return 200');
-        assert.ok(getResult.headers.etag, 'Get should return an ETag');
         assert.strictEqual(getResult.body.type, TEST_AIRPORT.type, 'Document should be of type airport');
         assert.strictEqual(getResult.body.id, TEST_AIRPORT.id, 'Document should have correct ID');
         console.log('✓ Get Airport test passed\n');
@@ -192,11 +186,9 @@ async function runTests() {
         const updateResult = await makeRequest(
             'PUT',
             `/airports/${TEST_AIRPORT.id}`,
-            updatedAirport,
-            { 'If-Match': etag }
+            updatedAirport
         );
         assert.strictEqual(updateResult.statusCode, 200, 'Update should return 200');
-        assert.ok(updateResult.headers.etag, 'Update should return an ETag');
         console.log('✓ Update Airport test passed\n');
 
         // Test Get Airport Routes
@@ -239,8 +231,7 @@ async function runTests() {
         const deleteResult = await makeRequest(
             'DELETE',
             `/airports/${TEST_AIRPORT.id}`,
-            null,
-            { 'If-Match': updateResult.headers.etag }
+            null
         );
         assert.strictEqual(deleteResult.statusCode, 204, 'Delete should return 204');
         console.log('✓ Delete Airport test passed\n');

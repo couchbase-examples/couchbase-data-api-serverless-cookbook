@@ -1,47 +1,13 @@
-// Collection configuration
-const COLLECTION_CONFIG = {
-    bucket: 'travel-sample',
-    scope: 'inventory',
-    collection: 'airport'
-};
-
-// Error formatting function
-const formatError = function(error) {
-    return {
-        statusCode: error.statusCode || 500,
-        headers: {
-            "Content-Type": "application/json"
-        },
-        isBase64Encoded: false,
-        body: JSON.stringify({
-            error: error.message
-        })
-    };
-};
+import { COLLECTION_CONFIG, validateDataApiConfig, getDataApiConfig, getDocumentUrl, buildAuthHeader, formatError, jsonResponse } from './utils/common.mjs';
 
 export const handler = async (event) => {
     try {
-        // Configuration validation
-        if (!process.env.DATA_API_ENDPOINT) {
-            return formatError({
-                statusCode: 500,
-                message: "Internal Server Error"
-            });
-        }
-        if (!process.env.DATA_API_PASSWORD) {
-            return formatError({
-                statusCode: 500,
-                message: "Internal Server Error"
-            });
-        }
-        if (!process.env.DATA_API_USERNAME) {
-            return formatError({
-                statusCode: 500,
-                message: "Internal Server Error"
-            });
-        }
+        // 1. Validate configuration
+        const cfgError = validateDataApiConfig();
+        if (cfgError) return formatError(cfgError);
+        const cfg = getDataApiConfig();
 
-        // Extract airport ID from path parameters
+        // 2. Parse and validate input
         const airportId = event.pathParameters?.airportId;
         if (!airportId) {
             return formatError({
@@ -50,50 +16,27 @@ export const handler = async (event) => {
             });
         }
 
-        const baseUrl = process.env.DATA_API_ENDPOINT;
-        const username = process.env.DATA_API_USERNAME;
-        const password = process.env.DATA_API_PASSWORD;
+        // 3. Prepare Data API request
+        const auth = buildAuthHeader(cfg.username, cfg.password);
 
-        // Create Basic Auth header
-        const auth = Buffer.from(`${username}:${password}`).toString('base64');
-
-        // Make the HTTP request using fetch
-        const url = `${baseUrl}/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}`;
+        // 4. Execute Data API request
+        const url = getDocumentUrl(airportId);
         
         const fetchResponse = await fetch(url, {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json',
-                'Authorization': `Basic ${auth}`
+                'Authorization': auth
             }
         });
 
         const responseData = await fetchResponse.text();
 
-        if (fetchResponse.ok) {
-            return {
-                statusCode: 204,
-                body: '',
-                isBase64Encoded: false
-            };
-        } else {
-            if (fetchResponse.status === 404) {
-                return formatError({
-                    statusCode: 404,
-                    message: "Airport does not exist"
-                });
-            } else if (fetchResponse.status === 400) {
-                return formatError({
-                    statusCode: 400,
-                    message: "Invalid airport ID"
-                });
-            } else {
-                return formatError({
-                    statusCode: 500,
-                    message: "Internal Server Error"
-                });
-            }
-        }
+        // 5. Handle response and format output
+        if (fetchResponse.ok) return { statusCode: 204, body: '', isBase64Encoded: false };
+        if (fetchResponse.status === 404) return formatError({ statusCode: 404, message: "Airport does not exist" });
+        if (fetchResponse.status === 400) return formatError({ statusCode: 400, message: "Invalid airport ID" });
+        return formatError({ statusCode: 500, message: "Internal Server Error" });
 
     } catch (error) {
         console.error('Lambda execution error:', error);

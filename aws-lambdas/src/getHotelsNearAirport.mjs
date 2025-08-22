@@ -1,50 +1,13 @@
-// Collection configuration
-const COLLECTION_CONFIG = {
-    bucket: 'travel-sample',
-    scope: 'inventory',
-    collection: 'airport'
-};
-
-// Error formatting function
-const formatError = function(error) {
-    return {
-        statusCode: error.statusCode || 500,
-        headers: {
-            "Content-Type": "application/json"
-        },
-        isBase64Encoded: false,
-        body: JSON.stringify({
-            error: error.message
-        })
-    };
-};
+import { COLLECTION_CONFIG, validateDataApiConfig, getDataApiConfig, getDocumentUrl, getFTSSearchUrl, buildAuthHeader, formatError, jsonResponse } from './utils/common.mjs';
 
 export const handler = async (event) => {
     try {
-        // Configuration validation
-        if (!process.env.DATA_API_ENDPOINT) {
-            return formatError({
-                statusCode: 500,
-                code: "ConfigurationError",
-                message: "DATA_API_ENDPOINT environment variable is not set"
-            });
-        }
-        if (!process.env.DATA_API_PASSWORD) {
-            return formatError({
-                statusCode: 500,
-                code: "ConfigurationError",
-                message: "DATA_API_PASSWORD environment variable is not set"
-            });
-        }
-        if (!process.env.DATA_API_USERNAME) {
-            return formatError({
-                statusCode: 500,
-                code: "ConfigurationError",
-                message: "DATA_API_USERNAME environment variable is not set"
-            });
-        }
+        // 1. Validate configuration
+        const cfgError = validateDataApiConfig();
+        if (cfgError) return formatError(cfgError);
+        const cfg = getDataApiConfig();
 
-        // Get parameters from path parameters
+        // 2. Parse and validate input
         const airportId = event.pathParameters?.airportId;
         const distance = event.pathParameters?.distance || "5km";
 
@@ -56,21 +19,17 @@ export const handler = async (event) => {
             });
         }
 
-        const baseUrl = process.env.DATA_API_ENDPOINT;
-        const username = process.env.DATA_API_USERNAME;
-        const password = process.env.DATA_API_PASSWORD;
+        // 3. Prepare Data API request
+        const auth = buildAuthHeader(cfg.username, cfg.password);
 
-        // Create Basic Auth header
-        const auth = Buffer.from(`${username}:${password}`).toString('base64');
-
-        // Step 1: Get airport document
-        const airportUrl = `${baseUrl}/v1/buckets/${COLLECTION_CONFIG.bucket}/scopes/${COLLECTION_CONFIG.scope}/collections/${COLLECTION_CONFIG.collection}/documents/${airportId}`;
+        // 4. Execute Data API requests
+        const airportUrl = getDocumentUrl(airportId);
         
         const airportFetchResponse = await fetch(airportUrl, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
-                'Authorization': `Basic ${auth}`
+                'Authorization': auth
             }
         });
 
@@ -85,7 +44,7 @@ export const handler = async (event) => {
         const airportResponse = await airportFetchResponse.json();
         const { lat: latitude, lon: longitude } = airportResponse.geo;
 
-        // Step 2: Search for nearby hotels using FTS
+        // 4b. Execute FTS request
         const ftsQuery = {
             from: 0,
             size: 20,
@@ -114,18 +73,19 @@ export const handler = async (event) => {
 
         const body = JSON.stringify(ftsQuery);
 
-        const ftsUrl = `${baseUrl}/_p/fts/api/bucket/${COLLECTION_CONFIG.bucket}/scope/${COLLECTION_CONFIG.scope}/index/hotel-geo-index/query`;
+        const ftsUrl = getFTSSearchUrl('hotel-geo-index');
         
         const ftsFetchResponse = await fetch(ftsUrl, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': `Basic ${auth}`
+                'Authorization': auth
             },
             body: body
         });
 
+        // 5. Handle response and format output
         if (!ftsFetchResponse.ok) {
             return formatError({
                 statusCode: ftsFetchResponse.status,

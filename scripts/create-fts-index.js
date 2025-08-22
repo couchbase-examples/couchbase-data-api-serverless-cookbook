@@ -39,7 +39,8 @@ const BUCKET_NAME = 'travel-sample';
 const SCOPE_NAME = 'inventory';
 
 // Construct the URL
-const apiUrl = `https://${DATA_API_ENDPOINT}/_p/fts/api/bucket/${BUCKET_NAME}/scope/${SCOPE_NAME}/index/${INDEX_NAME}`;
+const cleanEndpoint = DATA_API_ENDPOINT.replace(/^https?:\/\//, '');
+const apiUrl = `https://${cleanEndpoint}/_p/fts/api/bucket/${BUCKET_NAME}/scope/${SCOPE_NAME}/index/${INDEX_NAME}`;
 
 console.log(`Creating FTS index '${INDEX_NAME}' for geo-spatial hotel search...`);
 console.log(`URL: ${apiUrl}`);
