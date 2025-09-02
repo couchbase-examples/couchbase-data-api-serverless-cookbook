@@ -95,6 +95,34 @@ This script will:
 2. Set up Cloud Function integrations
 3. Create a gateway and output the API endpoint URL
 
+#### Important: API Gateway Permissions
+
+If you encounter `403 Forbidden` errors when testing the API endpoints, grant the default Compute Engine service account permission to invoke Cloud Run. In this setup, API Gateway uses that identity under the hood, and this is required because Cloud Functions are deployed with authentication enabled by default
+
+**Grant the required permission:**
+
+```bash
+# Get your project number
+PROJECT_NUMBER=$(gcloud projects describe $(gcloud config get-value project) --format="value(projectNumber)")
+
+# Grant Cloud Run Invoker role to the Compute Engine default service account
+gcloud projects add-iam-policy-binding $(gcloud config get-value project) \
+    --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --role="roles/run.invoker"
+```
+
+**Alternative method - if you know your project number:**
+```bash
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+    --member="serviceAccount:YOUR_PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+    --role="roles/run.invoker"
+```
+
+You can find your project number in the [Google Cloud Console](https://console.cloud.google.com) project settings or by running:
+```bash
+gcloud projects describe $(gcloud config get-value project) --format="value(projectNumber)"
+```
+
 ## Testing
 
 ### Integration Testing
