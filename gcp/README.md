@@ -97,7 +97,7 @@ This script will:
 
 #### Important: API Gateway Permissions
 
-If you encounter `403 Forbidden` errors when testing the API endpoints, you need to grant the API Gateway service account permission to invoke your Cloud Functions. This is required because Cloud Functions are deployed with authentication enabled by default.
+If you encounter `403 Forbidden` errors when testing the API endpoints, grant the default Compute Engine service account permission to invoke Cloud Run. In this setup, API Gateway uses that identity under the hood, and this is required because Cloud Functions are deployed with authentication enabled by default
 
 **Grant the required permission:**
 
