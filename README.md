@@ -1,6 +1,6 @@
 # Couchbase Data API Serverless Cookbook
 
-> ** Important:** This cookbook demonstrates building **serverless REST APIs** that use **Couchbase Data API** under the hood. Your applications interact with standard REST endpoints, while the serverless functions handle all communication with Couchbase's Data API internally.
+> **Important:** This cookbook demonstrates building **serverless REST APIs** that use **Couchbase Data API** under the hood. Your applications interact with standard REST endpoints, while the serverless functions handle all communication with Couchbase's Data API internally.
 
 This cookbook demonstrates how to build serverless REST APIs across multiple cloud platforms (AWS Lambda, Azure Functions, Cloudflare Workers, and Google Cloud Functions) that interface with Couchbase's Data API to manage airport data from the travel-sample dataset.
 
