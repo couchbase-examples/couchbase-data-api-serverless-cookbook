@@ -12,8 +12,8 @@ This project demonstrates how to build a Cloudflare Workers-based API using the 
 - [Node.js](https://nodejs.org/) (v20 or later)
 - [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/)
 - [Cloudflare account](https://dash.cloudflare.com/) with verified email
-- [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with Data API enabled
-- Couchbase [travel-sample](https://docs.couchbase.com/dotnet-sdk/current/ref/travel-app-data-model.html) bucket loaded
+- [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with [Data API enabled](https://docs.couchbase.com/cloud/data-api-guide/data-api-start.html#enable-the-data-api)
+- Couchbase [travel-sample](https://docs.couchbase.com/cloud/clusters/data-service/import-data-documents.html) bucket loaded
 
 ## Setup
 

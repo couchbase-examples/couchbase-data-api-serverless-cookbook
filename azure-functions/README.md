@@ -13,8 +13,8 @@ This project demonstrates how to build an Azure Functions-based API that interfa
 - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/) configured with appropriate credentials
 - [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local) (v4.x)
 - Azure subscription with Functions and API Management permissions
-- [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with Data API enabled
-- Couchbase [travel-sample](https://docs.couchbase.com/dotnet-sdk/current/ref/travel-app-data-model.html) bucket loaded
+- [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with [Data API enabled](https://docs.couchbase.com/cloud/data-api-guide/data-api-start.html#enable-the-data-api)
+- Couchbase [travel-sample](https://docs.couchbase.com/cloud/clusters/data-service/import-data-documents.html) bucket loaded
 
 ## Setup
 
