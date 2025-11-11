@@ -12,8 +12,8 @@ This project demonstrates how to build a serverless API using **[GCP Cloud Funct
 - [Node.js](https://nodejs.org/) (v22.x or later)
 - [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) configured with appropriate credentials.
 - Google Cloud Project with Cloud Functions and API Gateway with [services enabled.](https://cloud.google.com/api-gateway/docs/secure-traffic-gcloud#enabling_required_services)
-- [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with Data API enabled.
-- Couchbase [travel-sample](https://docs.couchbase.com/dotnet-sdk/current/ref/travel-app-data-model.html) bucket loaded.
+- [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with [Data API enabled](https://docs.couchbase.com/cloud/data-api-guide/data-api-start.html#enable-the-data-api).
+- Couchbase [travel-sample](https://docs.couchbase.com/cloud/clusters/data-service/import-data-documents.html) bucket loaded.
 
 ## Setup
 
