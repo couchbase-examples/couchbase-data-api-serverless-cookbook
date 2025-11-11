@@ -2,7 +2,7 @@
 
 > **Important:** This cookbook demonstrates building **serverless REST APIs** that use **Couchbase Data API** under the hood. Your applications interact with standard REST endpoints, while the serverless functions handle all communication with Couchbase's Data API internally.
 
-This cookbook demonstrates how to build serverless REST APIs across multiple cloud platforms (AWS Lambda, Azure Functions, Cloudflare Workers, and Google Cloud Functions) that interface with Couchbase's Data API to manage airport data from the travel-sample dataset.
+It includes examples for AWS Lambda, Azure Functions, Cloudflare Workers, and Google Cloud Functions, using airport data from the travel-sample dataset.
 
 ## Overview
 
@@ -96,9 +96,7 @@ The hotel proximity search functionality requires a Full Text Search index with 
 
 A common Node.js script is provided to create the required geo-spatial FTS index. See [scripts/README.md](./scripts/README.md) for detailed instructions on how to create the FTS index.
 
-
-
-## REST API Endpoints & Usage Examples
+## Usage Examples
 
 > **Note:** These are the **REST API endpoints** that your client applications will use. Behind the scenes, the serverless functions translate these REST calls into Couchbase Data API requests, handling authentication and data transformation automatically.
 
