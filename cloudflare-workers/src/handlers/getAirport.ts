@@ -4,7 +4,7 @@ import { getAuthHeaders, getDocumentUrl } from '../utils/couchbase';
 
 export const getAirport = async (c: Context<{ Bindings: Env }>) => {
 	try {
-		const airportId = c.req.param('airportId');
+		const airportId = c.req.param('airportId') as string;
 		const env = c.env;
 		const url = getDocumentUrl(env, airportId);
 		
