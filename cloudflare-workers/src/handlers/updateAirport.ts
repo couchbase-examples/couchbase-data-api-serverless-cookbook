@@ -4,7 +4,7 @@ import { getAuthHeaders, getDocumentUrl } from '../utils/couchbase';
 
 export const updateAirport = async (c: Context<{ Bindings: Env }>) => {
 	try {
-		const documentKey = c.req.param('documentKey');
+		const documentKey = c.req.param('documentKey') as string;
 		const env = c.env;
 		
 		let airportData: any;

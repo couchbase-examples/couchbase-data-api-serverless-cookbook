@@ -92,7 +92,7 @@ npm run deploy
 
 ## Testing
 
-This project includes comprehensive unit tests for all handler functions using [Vitest](https://vitest.dev/) and the [@cloudflare/vitest-pool-workers](https://developers.cloudflare.com/workers/testing/vitest-integration/) testing framework.
+This project includes comprehensive unit tests for all handler functions using [Vitest](https://vitest.dev/) and the [@cloudflare/vitest-plugin](https://developers.cloudflare.com/workers/testing/vitest-integration/) testing framework.
 
 ### Running Tests
 

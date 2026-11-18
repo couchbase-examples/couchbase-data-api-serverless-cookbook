@@ -9,7 +9,7 @@ This project demonstrates how to build an Azure Functions-based API that interfa
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18.x or later)
+- [Node.js](https://nodejs.org/) (v22.x or later)
 - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/) configured with appropriate credentials
 - [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local) (v4.x)
 - Azure subscription with Functions and API Management permissions
