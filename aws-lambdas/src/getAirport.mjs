@@ -1,11 +1,10 @@
-import { COLLECTION_CONFIG, validateDataApiConfig, getDataApiConfig, getDocumentUrl, buildAuthHeader, formatError, jsonResponse } from './utils/common.mjs';
+import { COLLECTION_CONFIG, validateDataApiConfig, dataApiFetch, getDocumentUrl, formatError, jsonResponse } from './utils/common.mjs';
 
 export const handler = async (event) => {
     try {
         // 1. Validate configuration
         const cfgError = validateDataApiConfig();
         if (cfgError) return formatError(cfgError);
-        const cfg = getDataApiConfig(); 
 
         // 2. Parse and validate input
         const airportId = event?.pathParameters?.airportId;
@@ -16,23 +15,14 @@ export const handler = async (event) => {
             });
         }
 
-        // 3. Prepare Data API request
-        const auth = buildAuthHeader(cfg.username, cfg.password);
-
-        // Make the HTTP request using fetch
+        // 3. Execute Data API request
         const url = getDocumentUrl(airportId);
         
-        const fetchResponse = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': auth
-            }
-        });
+        const fetchResponse = await dataApiFetch(url, { method: 'GET' });
 
         let responseData = await fetchResponse.text();
 
-        // 5. Handle response and format output
+        // 4. Handle response and format output
         if (fetchResponse.ok) {
             try {
                 const parsedData = JSON.parse(responseData);

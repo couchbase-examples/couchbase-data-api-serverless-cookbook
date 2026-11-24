@@ -1,12 +1,10 @@
-import { COLLECTION_CONFIG, validateDataApiConfig, getDataApiConfig, getQueryUrl, buildAuthHeader, formatError, jsonResponse } from './utils/common.mjs';
+import { COLLECTION_CONFIG, validateDataApiConfig, dataApiFetch, getQueryUrl, formatError, jsonResponse } from './utils/common.mjs';
 
 export const handler = async (event) => {
     try {
         // 1. Validate configuration
         const cfgError = validateDataApiConfig();
         if (cfgError) return formatError(cfgError);
-        const cfg = getDataApiConfig();
-        const baseUrl = cfg.baseUrl;
 
         // 2. Parse and validate input
         const airportCode = event.pathParameters?.airportCode;
@@ -17,9 +15,6 @@ export const handler = async (event) => {
                 message: "Airport code is required as a path parameter"
             });
         }
-
-        // 3. Prepare Data API request
-        const auth = buildAuthHeader(cfg.username, cfg.password);
 
         // Create query
         const queryBody = {
@@ -34,21 +29,13 @@ export const handler = async (event) => {
 
         const body = JSON.stringify(queryBody);
 
-        // 4. Execute Data API request
+        // 3. Execute Data API request
         const url = getQueryUrl();
         
-        const fetchResponse = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': auth
-            },
-            body: body
-        });
+        const fetchResponse = await dataApiFetch(url, { method: 'POST', body: body });
 
         const responseData = await fetchResponse.text();
-        // 5. Handle response and format output
+        // 4. Handle response and format output
         if (fetchResponse.ok) {
             const queryResponse = JSON.parse(responseData);
             return jsonResponse(200, {

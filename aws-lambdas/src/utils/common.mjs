@@ -31,6 +31,16 @@ export const buildAuthHeader = function(username, password) {
     return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
 };
 
+// Single seam for Data API HTTP calls: owns Basic auth and the JSON headers,
+// so handlers only decide the URL, method and payload.
+export const dataApiFetch = function(url, { method = 'GET', body } = {}) {
+    const cfg = getDataApiConfig();
+    const headers = { 'Accept': 'application/json' };
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    headers['Authorization'] = buildAuthHeader(cfg.username, cfg.password);
+    return fetch(url, { method, headers, body });
+};
+
 export const getDocumentUrl = function(docId) {
     const cfg = getDataApiConfig();
     const safeId = encodeURIComponent(docId);
