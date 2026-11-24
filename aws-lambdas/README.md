@@ -153,7 +153,12 @@ npm run offline
 
 ## Testing
 
-Run the local test suite:
+Run the offline contract tests (no Capella cluster or `.env` needed; they stub `fetch` and check each handler's Data API request and response mapping):
+```bash
+npm run test-offline
+```
+
+Run the local test suite against your Capella Data API endpoint:
 ```bash
 npm run test-unit
 npm run test-integration
@@ -175,9 +180,12 @@ aws-lambdas/
 │   ├── getAirportAirlines.mjs
 │   ├── getAirportRoutes.mjs
 │   ├── getHotelsNearAirport.mjs
-│   └── updateAirport.mjs
+│   ├── updateAirport.mjs
+│   └── utils/
+│       └── common.mjs                    # Shared config, URL builders and the dataApiFetch seam
 └── tests/                                # Test suites
     ├── integration.test.mjs
+    ├── offline.test.mjs                  # Offline contract tests (stubbed fetch)
     └── unit.test.mjs
 ```
 

@@ -4,6 +4,7 @@
   "main": "index.mjs",
   "type": "module",
   "scripts": {
+    "test-offline": "node --test tests/offline.test.mjs",
     "test-unit": "env-cmd -f .env node tests/unit.test.mjs",
     "test-integration": "env-cmd -f .env node tests/integration.test.mjs",
     "deploy": "serverless deploy",
